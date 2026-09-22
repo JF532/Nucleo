@@ -53,10 +53,20 @@ export function renderFila(container, snapshot, meta, step){
   });
 
   if(step && step.tempNode!==undefined){
-    const plus=document.createElement('div');
-    plus.style.cssText='margin-left:12px;color:var(--warning);font-size:12px;border:1px dashed var(--warning);padding:6px 10px;border-radius:10px;background:rgba(245,158,11,.08)';
-    plus.textContent=`[ ${step.tempNode} ] novo`;
-    wrap.appendChild(plus);
+    if(step.arrowFromTemp && snapshot.length>0){
+      const oldHead = snapshot[0];
+      const bifur=document.createElement('div');
+      bifur.style.cssText='margin-left:12px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;color:var(--warning);font-size:12px';
+      bifur.innerHTML=`<span style="border:1px dashed var(--warning);padding:6px 10px;border-radius:10px;background:rgba(245,158,11,.08)"><b>[ ${step.tempNode} ] novo</b> — ${meta.no.proximo||'prox'} → ${oldHead}</span><span style="font-size:10px;color:var(--text-muted);border-left:2px dashed var(--border);padding-left:8px"><span style="color:var(--accent)">${meta.ponteiros.inicio||'inicio'} → ${oldHead}</span> | <span style="color:var(--warning)">novo → ${oldHead}</span></span>`;
+      wrap.appendChild(bifur);
+      const firstBox=wrap.querySelectorAll('.node-box')[0];
+      if(firstBox) firstBox.classList.add('active');
+    } else {
+      const plus=document.createElement('div');
+      plus.style.cssText='margin-left:12px;color:var(--warning);font-size:12px;border:1px dashed var(--warning);padding:6px 10px;border-radius:10px;background:rgba(245,158,11,.08)';
+      plus.innerHTML=`[ ${step.tempNode} ] novo<br><span style="font-size:10px">${meta.no.proximo||'prox'} → NULL</span>`;
+      wrap.appendChild(plus);
+    }
   }
 
   container.appendChild(wrap);

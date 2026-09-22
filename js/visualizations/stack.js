@@ -40,10 +40,21 @@ export function renderPilha(container, snapshot, meta, step){
   });
 
   if(step && step.tempNode!==undefined){
-    const temp = document.createElement('div');
-    temp.style.cssText='margin-top:8px;color:var(--warning);font-size:12px;border:1px dashed var(--warning);padding:6px 10px;border-radius:10px;background:rgba(245,158,11,.08)';
-    temp.textContent = `[ ${step.tempNode} ] novo`;
-    wrap.appendChild(temp);
+    if(step.arrowFromTemp && snapshot.length>0){
+      const oldHead = snapshot[0];
+      const bifur = document.createElement('div');
+      bifur.style.cssText='margin-top:10px;border:1px dashed var(--warning);padding:8px 12px;border-radius:10px;background:rgba(245,158,11,.08);color:var(--warning);font-size:12px;text-align:center';
+      bifur.innerHTML = `<b>[ ${step.tempNode} ] novo</b> — ${meta.no.proximo||'prox'} → ${oldHead}<br><span style="font-size:10px;color:var(--text-muted)"><span style="color:var(--accent)">${meta.ponteiroPrincipal||'topo'} → ${oldHead}</span> | <span style="color:var(--warning)">novo → ${oldHead}</span> — próximo: topo → novo</span>`;
+      wrap.appendChild(bifur);
+      // destaca topo atual
+      const firstBox = wrap.querySelector('.node-box');
+      if(firstBox) firstBox.classList.add('active');
+    } else {
+      const temp = document.createElement('div');
+      temp.style.cssText='margin-top:8px;color:var(--warning);font-size:12px;border:1px dashed var(--warning);padding:6px 10px;border-radius:10px;background:rgba(245,158,11,.08)';
+      temp.textContent = `[ ${step.tempNode} ] novo`;
+      wrap.appendChild(temp);
+    }
   }
 
   container.appendChild(wrap);
