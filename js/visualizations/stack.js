@@ -48,8 +48,8 @@ export function renderPilha(container, snapshot, meta, step){
     const tempBox=document.createElement('div');
     tempBox.className='node-box stack temp active';
     tempBox.id='fork-novo-box-stack';
-    tempBox.style.minWidth='110px';
-    tempBox.innerHTML=`<div class="node-label">novo</div><div class="node-value">${step.tempNode}</div><div class="node-field" style="font-size:11px;justify-content:center"><span>${meta.no.proximo||'prox'}</span><b style="margin-left:6px">→ ${oldHead}</b></div>`;
+    tempBox.style.minWidth='128px';
+    tempBox.innerHTML=`<div class="node-label">novo</div><div class="node-value">${step.tempNode}</div><div class="node-field" style="font-size:11px;justify-content:center"><span>${meta.no.proximo||'prox'}</span><b style="margin-left:10px">→ ${oldHead}</b></div>`;
     tempNode.appendChild(tempBox);
     wrap.appendChild(tempNode);
 
@@ -67,9 +67,9 @@ export function renderPilha(container, snapshot, meta, step){
       const box=document.createElement('div');
       box.className='node-box stack'+(idx===0?' active':'');
       if(idx===0) box.id='fork-head-box-stack';
-      box.style.minWidth='110px';
+      box.style.minWidth='128px';
       const nextVal = idx < snapshot.length-1 ? snapshot[idx+1] : 'NULL';
-      box.innerHTML=`<div class="node-value">${valor}</div><div class="node-label">${idx===0?'antigo topo':''}</div><div class="node-field" style="font-size:11px;justify-content:center"><span>${meta.no.proximo||'prox'}</span><b style="margin-left:6px">→ ${nextVal}</b></div>`;
+      box.innerHTML=`<div class="node-value">${valor}</div><div class="node-label">${idx===0?'antigo topo':''}</div><div class="node-field" style="font-size:11px;justify-content:center"><span>${meta.no.proximo||'prox'}</span><b style="margin-left:10px">→ ${nextVal}</b></div>`;
       node.appendChild(box);
       wrap.appendChild(node);
       if(idx < snapshot.length-1){
@@ -157,8 +157,8 @@ export function renderPilha(container, snapshot, meta, step){
     const nextVal = idx < snapshot.length-1 ? snapshot[idx+1] : 'NULL';
     const box = document.createElement('div');
     box.className='node-box stack'+(isActive?' active':'');
-    box.style.minWidth='110px';
-    box.innerHTML = `<div class="node-value">${valor}</div><div class="node-label">${idx===0?'topo':''}</div><div class="node-field" style="font-size:11px;justify-content:center"><span>${meta.no.proximo||'prox'}</span><b style="margin-left:6px">→ ${nextVal}</b></div>`;
+    box.style.minWidth='128px';
+    box.innerHTML = `<div class="node-value">${valor}</div><div class="node-label">${idx===0?'topo':''}</div><div class="node-field" style="font-size:11px;justify-content:center"><span>${meta.no.proximo||'prox'}</span><b style="margin-left:10px">→ ${nextVal}</b></div>`;
     node.appendChild(box);
     wrap.appendChild(node);
     if(idx < snapshot.length-1){

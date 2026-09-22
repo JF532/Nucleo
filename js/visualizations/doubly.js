@@ -21,7 +21,7 @@ export function renderDupla(container, snapshot, meta, step){
     const inner=document.createElement('div');
     inner.className='visualization-inner';
     inner.style.position='relative';
-    inner.style.paddingTop='8px';
+    inner.style.paddingTop='28px';
     const row=document.createElement('div');
     row.className='nodes-row';
     row.style.position='relative';
@@ -37,7 +37,7 @@ export function renderDupla(container, snapshot, meta, step){
     row.appendChild(nullLeft);
     const arrowLeft=document.createElement('div');
     arrowLeft.className='arrow double';
-    arrowLeft.style.width='28px';
+    arrowLeft.style.width='42px';
     row.appendChild(arrowLeft);
     snapshot.forEach((valor, idx)=>{
       const node=document.createElement('div');
@@ -67,7 +67,7 @@ export function renderDupla(container, snapshot, meta, step){
     });
     const arrowRight=document.createElement('div');
     arrowRight.className='arrow';
-    arrowRight.style.width='28px';
+    arrowRight.style.width='42px';
     row.appendChild(arrowRight);
     const nullRight=document.createElement('div');
     nullRight.className='null-box';
@@ -77,7 +77,7 @@ export function renderDupla(container, snapshot, meta, step){
 
     // novo embaixo
     const below=document.createElement('div');
-    below.style.cssText='display:flex;align-items:center;gap:12px;margin-top:14px;margin-left:68px';
+    below.style.cssText='display:flex;align-items:center;gap:18px;margin-top:18px;margin-left:96px';
     below.id='fork-below-double';
     const novoNode=document.createElement('div');
     novoNode.className='node';
@@ -137,12 +137,14 @@ export function renderDupla(container, snapshot, meta, step){
         const xHead=(rHead.left + rHead.width/2)-rInner.left;
         const yHeadTop=rHead.top - rInner.top - 6;
         const yHeadBottom=rHead.bottom - rInner.top + 4;
-        const midY = yNovoTop - 12;
+        const midY = yNovoTop - 20;
+        const xHeadInicio = xHead - 14;
+        const xHeadNovo = xHead + 14;
         pInicioNovo.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${midY} L ${xNovo} ${midY} L ${xNovo} ${yNovoTop}`);
-        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHead} ${midY}, ${xHead} ${yHeadTop}`);
+        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHeadInicio} ${midY}, ${xHeadInicio} ${yHeadTop}`);
         const xNovoRight = (rNovo.right) - rInner.left;
         const yNovoMid = (rNovo.top + rNovo.height/2) - rInner.top;
-        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHead-30} ${yNovoMid}, ${xHead} ${yHeadBottom - 10}, ${xHead} ${yHeadBottom}`);
+        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHeadNovo-30} ${yNovoMid}, ${xHeadNovo} ${yHeadBottom - 10}, ${xHeadNovo} ${yHeadBottom}`);
         const maxY=Math.max(yInicio,yNovoTop,yHeadTop)+50;
         svg.setAttribute('height', maxY+20); svg.style.height=(maxY+20)+'px';
         inner.style.minHeight=(maxY+60)+'px';
@@ -165,7 +167,7 @@ export function renderDupla(container, snapshot, meta, step){
   wrap.appendChild(nullLeft);
   const arrowLeft = document.createElement('div');
   arrowLeft.className='arrow double';
-  arrowLeft.style.width='28px';
+  arrowLeft.style.width='42px';
   wrap.appendChild(arrowLeft);
   snapshot.forEach((valor, idx)=>{
     const node = document.createElement('div');
@@ -194,12 +196,12 @@ export function renderDupla(container, snapshot, meta, step){
   });
   const arrowRight = document.createElement('div');
   arrowRight.className='arrow';
-  arrowRight.style.width='28px';
+  arrowRight.style.width='42px';
   wrap.appendChild(arrowRight);
   const nullRight = document.createElement('div');
   nullRight.className='null-box';
   nullRight.textContent='NULL';
-  nullRight.style.marginLeft='6px';
+  nullRight.style.marginLeft='10px';
   wrap.appendChild(nullRight);
   if(step && step.tempNode!==undefined){
     const plus = document.createElement('div');

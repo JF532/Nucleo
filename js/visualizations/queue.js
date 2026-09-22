@@ -23,7 +23,7 @@ export function renderFila(container, snapshot, meta, step){
     const inner=document.createElement('div');
     inner.className='visualization-inner';
     inner.style.position='relative';
-    inner.style.paddingTop='8px';
+    inner.style.paddingTop='28px';
     const row=document.createElement('div');
     row.className='nodes-row';
     row.style.position='relative';
@@ -39,7 +39,7 @@ export function renderFila(container, snapshot, meta, step){
       const box=document.createElement('div');
       box.className='node-box'+(idx===0?' active':'');
       if(idx===0) box.id='fork-head-box-queue';
-      box.style.minWidth='110px';
+      box.style.minWidth='128px';
       if(idx===snapshot.length-1) box.style.borderColor='#a78bfa';
       const nextVal= idx<snapshot.length-1 ? snapshot[idx+1] : 'NULL';
       box.innerHTML=`<div class="node-value">${valor}</div><div class="node-field"><span>${meta.no.proximo||'prox'}</span><b>→ ${nextVal}</b></div>`;
@@ -60,13 +60,13 @@ export function renderFila(container, snapshot, meta, step){
         const nullBox=document.createElement('div');
         nullBox.className='null-box';
         nullBox.textContent='NULL';
-        nullBox.style.marginLeft='6px';
+        nullBox.style.marginLeft='10px';
         row.appendChild(nullBox);
       }
     });
     inner.appendChild(row);
     const below=document.createElement('div');
-    below.style.cssText='display:flex;align-items:center;gap:12px;margin-top:14px;margin-left:68px';
+    below.style.cssText='display:flex;align-items:center;gap:18px;margin-top:18px;margin-left:96px';
     below.id='fork-below-queue';
     const novoNode=document.createElement('div');
     novoNode.className='node';
@@ -74,7 +74,7 @@ export function renderFila(container, snapshot, meta, step){
     const novoBox=document.createElement('div');
     novoBox.className='node-box temp active';
     novoBox.id='fork-novo-box-queue';
-    novoBox.style.minWidth='110px';
+    novoBox.style.minWidth='128px';
     novoBox.innerHTML=`<div class="node-label">novo</div><div class="node-value">${step.tempNode}</div><div class="node-field"><span>${meta.no.proximo||'prox'}</span><b>→ ${oldHead}</b></div>`;
     novoNode.appendChild(novoBox);
     below.appendChild(novoNode);
@@ -125,12 +125,14 @@ export function renderFila(container, snapshot, meta, step){
         const xHead=(rHead.left + rHead.width/2)-rInner.left;
         const yHeadTop=rHead.top - rInner.top - 6;
         const yHeadBottom=rHead.bottom - rInner.top + 4;
-        const midY = yNovoTop - 12;
+        const midY = yNovoTop - 20;
+        const xHeadInicio = xHead - 14;
+        const xHeadNovo = xHead + 14;
         pInicioNovo.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${midY} L ${xNovo} ${midY} L ${xNovo} ${yNovoTop}`);
-        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHead} ${midY}, ${xHead} ${yHeadTop}`);
+        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHeadInicio} ${midY}, ${xHeadInicio} ${yHeadTop}`);
         const xNovoRight = (rNovo.right) - rInner.left;
         const yNovoMid = (rNovo.top + rNovo.height/2) - rInner.top;
-        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHead-30} ${yNovoMid}, ${xHead} ${yHeadBottom - 10}, ${xHead} ${yHeadBottom}`);
+        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHeadNovo-30} ${yNovoMid}, ${xHeadNovo} ${yHeadBottom - 10}, ${xHeadNovo} ${yHeadBottom}`);
         const maxY=Math.max(yInicio,yNovoTop,yHeadTop)+50;
         svg.setAttribute('height', maxY+20); svg.style.height=(maxY+20)+'px';
         inner.style.minHeight=(maxY+60)+'px';
@@ -153,7 +155,7 @@ export function renderFila(container, snapshot, meta, step){
     const nextVal= idx<snapshot.length-1 ? snapshot[idx+1] : 'NULL';
     const box = document.createElement('div');
     box.className='node-box'+(isActive?' active':'');
-    box.style.minWidth='110px';
+    box.style.minWidth='128px';
     if(idx===snapshot.length-1) box.style.borderColor='#a78bfa';
     box.innerHTML = `
       <div class="node-value">${valor}</div>
@@ -176,7 +178,7 @@ export function renderFila(container, snapshot, meta, step){
       const nullBox=document.createElement('div');
       nullBox.className='null-box';
       nullBox.textContent='NULL';
-      nullBox.style.marginLeft='6px';
+      nullBox.style.marginLeft='10px';
       wrap.appendChild(nullBox);
     }
   });

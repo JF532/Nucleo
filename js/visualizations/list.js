@@ -30,7 +30,7 @@ export function renderLista(container, snapshot, meta, step){
     const inner=document.createElement('div');
     inner.className='visualization-inner';
     inner.style.position='relative';
-    inner.style.paddingTop='8px';
+    inner.style.paddingTop='28px';
 
     // Linha superior: inicio + [10] -> [20] -> ...
     const row=document.createElement('div');
@@ -52,7 +52,7 @@ export function renderLista(container, snapshot, meta, step){
       const box=document.createElement('div');
       box.className='node-box'+(idx===0?' active':'');
       if(idx===0) box.id='fork-head-box';
-      box.style.minWidth='110px';
+      box.style.minWidth='128px';
       const nextVal = idx < snapshot.length-1 ? snapshot[idx+1] : 'NULL';
       box.innerHTML=`<div class="node-label">${meta.no.valor||'valor'}</div><div class="node-value">${valor}</div><div class="node-field"><span>${meta.no.proximo||'prox'}</span><b>→ ${nextVal}</b></div>`;
       node.appendChild(box);
@@ -65,16 +65,16 @@ export function renderLista(container, snapshot, meta, step){
         const nullBox=document.createElement('div');
         nullBox.className='null-box';
         nullBox.textContent='NULL';
-        nullBox.style.marginLeft='6px';
+        nullBox.style.marginLeft='10px';
         row.appendChild(nullBox);
       }
     });
 
     inner.appendChild(row);
 
-    // Linha inferior: novo embaixo, alinhado sob o antigo inicio (head)
+    // Linha inferior: novo embaixo, alinhado sob o antigo inicio (head) - bem arejado
     const below=document.createElement('div');
-    below.style.cssText='display:flex;align-items:center;gap:12px;margin-top:14px;margin-left:68px';
+    below.style.cssText='display:flex;align-items:center;gap:18px;margin-top:18px;margin-left:96px';
     below.id='fork-below-row';
     const novoNode=document.createElement('div');
     novoNode.className='node';
@@ -82,7 +82,7 @@ export function renderLista(container, snapshot, meta, step){
     const novoBox=document.createElement('div');
     novoBox.className='node-box temp active';
     novoBox.id='fork-novo-box';
-    novoBox.style.minWidth='110px';
+    novoBox.style.minWidth='128px';
     novoBox.innerHTML=`<div class="node-label">novo</div><div class="node-value">${step.tempNode}</div><div class="node-field"><span>${meta.no.proximo||'prox'}</span><b>→ ${oldHead}</b></div>`;
     novoNode.appendChild(novoBox);
     below.appendChild(novoNode);
@@ -138,16 +138,18 @@ export function renderLista(container, snapshot, meta, step){
         const xHead=(rHead.left + rHead.width/2)-rInner.left;
         const yHeadTop=rHead.top - rInner.top - 6;
         const yHeadBottom=rHead.bottom - rInner.top + 4;
-        // L: inicio -> novo (desce vertical e depois horizontal)
-        const midY = yNovoTop - 12;
-        // inicio -> novo : vertical down then horizontal to novo
+        // bem arejado: gap 28 entre chegadas, midY mais alto
+        const midY = yNovoTop - 20;
+        const xHeadInicio = xHead - 14;
+        const xHeadNovo = xHead + 14;
+        // inicio -> novo : L bem espaçado
         pInicioNovo.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${midY} L ${xNovo} ${midY} L ${xNovo} ${yNovoTop}`);
-        // inicio -> head (tracejado) : vertical down to head top
-        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHead} ${midY}, ${xHead} ${yHeadTop}`);
-        // novo -> head : diagonal up to head
+        // inicio -> head (tracejado) : chegada esquerda
+        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHeadInicio} ${midY}, ${xHeadInicio} ${yHeadTop}`);
+        // novo -> head : chegada direita, espaçado
         const xNovoRight = (rNovo.right) - rInner.left;
         const yNovoMid = (rNovo.top + rNovo.height/2) - rInner.top;
-        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHead-30} ${yNovoMid}, ${xHead} ${yHeadBottom - 10}, ${xHead} ${yHeadBottom}`);
+        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHeadNovo-30} ${yNovoMid}, ${xHeadNovo} ${yHeadBottom - 10}, ${xHeadNovo} ${yHeadBottom}`);
         const maxY = Math.max(yInicio, yNovoTop, yHeadTop) + 50;
         svg.setAttribute('height', maxY+20);
         svg.style.height = (maxY+20)+'px';
@@ -172,7 +174,7 @@ export function renderLista(container, snapshot, meta, step){
     const nextVal = idx < snapshot.length-1 ? snapshot[idx+1] : 'NULL';
     const box = document.createElement('div');
     box.className='node-box'+(isActive?' active':'');
-    box.style.minWidth='110px';
+    box.style.minWidth='128px';
     box.innerHTML = `
       <div class="node-label">${meta.no.valor||'valor'}</div>
       <div class="node-value">${valor}</div>
@@ -188,7 +190,7 @@ export function renderLista(container, snapshot, meta, step){
       const nullBox = document.createElement('div');
       nullBox.className='null-box';
       nullBox.textContent='NULL';
-      nullBox.style.marginLeft='6px';
+      nullBox.style.marginLeft='10px';
       wrap.appendChild(nullBox);
     }
   });
