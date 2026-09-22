@@ -1,6 +1,6 @@
 /* Generic node styles */
 .nodes-row{
-  display:flex;align-items:center;gap:0;flex-wrap:wrap;padding:8px 0;
+  display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:max-content;padding:12px 24px 12px 8px;
 }
 .node{
   display:flex;flex-direction:column;align-items:center;gap:6px;
@@ -43,8 +43,8 @@
 }
 
 /* Bifurcação SVG Passo 3 */
-.visualization-inner{position:relative}
-.fork-svg{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.visualization-inner{position:relative;min-width:max-content;padding-top:18px;padding-bottom:8px}
+.fork-svg{position:absolute;inset:0;pointer-events:none;overflow:visible;min-width:max-content}
 .fork-path{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .fork-path.inicio{stroke:var(--accent)}
 .fork-path.novo{stroke:var(--warning);stroke-dasharray:7 5}

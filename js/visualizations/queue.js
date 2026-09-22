@@ -23,7 +23,7 @@ export function renderFila(container, snapshot, meta, step){
     const inner=document.createElement('div');
     inner.className='visualization-inner';
     inner.style.position='relative';
-    inner.style.paddingTop='10px';
+    inner.style.paddingTop='22px';
     const row=document.createElement('div');
     row.className='nodes-row';
     row.style.position='relative';
