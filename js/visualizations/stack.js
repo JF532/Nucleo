@@ -134,94 +134,43 @@ export function renderPilha(container, snapshot, meta, step){
     return;
   }
 
-  // normal (não bifurcado) - topo via esquerda
-  const inner=document.createElement('div');
-  inner.className='visualization-inner';
-  inner.style.position='relative';
-  inner.style.display='flex';
-  inner.style.flexDirection='column';
-  inner.style.alignItems='center';
+  // normal (não bifurcado) - topo reto para baixo (só lateral quando adiciona)
   const wrap = document.createElement('div');
   wrap.className='stack-col';
-  wrap.style.position='relative';
   const topoLab = document.createElement('div');
   topoLab.className='pointer-label';
-  topoLab.id='stack-topo-label-normal';
   topoLab.innerHTML = `${meta.ponteiroPrincipal||meta.ponteiros.topo||'topo'}<span class="pointer-arrow">↓</span>`;
   wrap.appendChild(topoLab);
-  // placeholder for SVG arrow
-  const nodesWrap = document.createElement('div');
-  nodesWrap.style.display='flex';
-  nodesWrap.style.flexDirection='column';
-  nodesWrap.style.alignItems='center';
-  nodesWrap.style.gap='0';
   snapshot.forEach((valor, idx)=>{
     const node = document.createElement('div');
     node.className='node stack-node';
-    if(idx===0) node.id='stack-head-normal';
     const isActive = step && step.highlightIndex===idx;
     const nextVal = idx < snapshot.length-1 ? snapshot[idx+1] : 'NULL';
     const box = document.createElement('div');
     box.className='node-box stack'+(isActive?' active':'');
-    if(idx===0) box.id='stack-head-box-normal';
     box.style.minWidth='128px';
     box.innerHTML = `<div class="node-value">${valor}</div><div class="node-label">${idx===0?'topo':''}</div><div class="node-field" style="font-size:11px;justify-content:center"><span>${meta.no.proximo||'prox'}</span><b style="margin-left:10px">→ ${nextVal}</b></div>`;
     node.appendChild(box);
-    nodesWrap.appendChild(node);
+    wrap.appendChild(node);
     if(idx < snapshot.length-1){
       const arrow = document.createElement('div');
       arrow.className='arrow';
-      nodesWrap.appendChild(arrow);
+      wrap.appendChild(arrow);
     } else {
       const arr2 = document.createElement('div');
       arr2.className='arrow';
-      nodesWrap.appendChild(arr2);
+      wrap.appendChild(arr2);
       const nullBox = document.createElement('div');
       nullBox.className='null-box';
       nullBox.textContent='NULL';
-      nodesWrap.appendChild(nullBox);
+      wrap.appendChild(nullBox);
     }
   });
-  wrap.appendChild(nodesWrap);
-  inner.appendChild(wrap);
-  const svgNS='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(svgNS,'svg');
-  svg.classList.add('fork-svg');
-  svg.style.position='absolute';
-  svg.style.left='0';
-  svg.style.top='0';
-  svg.setAttribute('width','100%');
-  svg.setAttribute('height','60');
-  const defs=document.createElementNS(svgNS,'defs');
-  defs.innerHTML=`<marker id="arrow-accent-stack-normal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8"/></marker>`;
-  svg.appendChild(defs);
-  const pTopo=document.createElementNS(svgNS,'path');
-  pTopo.setAttribute('class','fork-path inicio');
-  pTopo.setAttribute('marker-end','url(#arrow-accent-stack-normal)');
-  svg.appendChild(pTopo);
-  inner.appendChild(svg);
-  container.appendChild(inner);
   if(step && step.tempNode!==undefined && !isBifurcated){
     const temp = document.createElement('div');
     temp.style.cssText='margin-top:8px;color:var(--warning);font-size:12px;border:1px dashed var(--warning);padding:6px 10px;border-radius:10px;background:rgba(245,158,11,.08)';
     temp.textContent = `[ ${step.tempNode} ] novo`;
-    container.appendChild(temp);
+    wrap.appendChild(temp);
   }
-  requestAnimationFrame(()=>{
-    try{
-      const rInner=inner.getBoundingClientRect();
-      const rTopo=document.getElementById('stack-topo-label-normal')?.getBoundingClientRect();
-      const rHead=document.getElementById('stack-head-box-normal')?.getBoundingClientRect();
-      if(!rTopo||!rHead) return;
-      const xTopo=(rTopo.left + rTopo.width/2)-rInner.left;
-      const yTopo=rTopo.bottom - rInner.top;
-      const xHeadLeft=(rHead.left)-rInner.left - 14;
-      const yHead=(rHead.top + rHead.height/2)-rInner.top;
-      const jy = Math.min(yTopo, yHead) - 12;
-      pTopo.setAttribute('d', `M ${xTopo} ${yTopo} L ${xTopo} ${jy} L ${xHeadLeft} ${jy} L ${xHeadLeft} ${yHead} L ${xHeadLeft+6} ${yHead}`);
-      const maxY = Math.max(yTopo, yHead)+20;
-      svg.setAttribute('height', maxY+10);
-      svg.style.height=(maxY+10)+'px';
-    }catch(e){}
-  });
+  container.appendChild(wrap);
 }

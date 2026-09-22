@@ -98,8 +98,13 @@ function resetOpsBlur(){
   if(selPos) selPos.value='inicio';
   // desabilita todos os botoes de operacao
   operationsDiv.querySelectorAll('.btn').forEach(b=> setDisabled(b,true));
-  // re-avalia botoes que nao precisam de input (ex: pop/dequeue) - mantem blur ate novo valor conforme requisito
-  // eles ficarao blurred ate o usuario digitar novamente
+  // pilha: desempilhar/consultar topo nao precisam de input, reabilitar se houver elementos
+  if(currentTipo==='pilha' && appState.lista.length>0){
+    const btnPop=document.getElementById('btnPop');
+    const btnTopo=document.getElementById('btnTopo');
+    if(btnPop) setDisabled(btnPop,false);
+    if(btnTopo) setDisabled(btnTopo,false);
+  }
 }
 
 // memory toggle
@@ -379,7 +384,8 @@ function buildOperations(){
   } else if(tipo==='pilha'){
     const g1=addGroup('Pilha (LIFO)', `
       <div class="op-row"><input id="pushValor" type="number" placeholder="valor"><button class="btn btn-primary" id="btnPush">Empilhar (push)</button></div>
-      <div class="op-row" style="margin-top:8px"><input id="buscaValor" type="number" placeholder="valor buscar" style="width:120px"><button class="btn btn-ghost" id="btnBuscar">Buscar</button><button class="btn btn-ghost" id="btnPop">Desempilhar (pop)</button><button class="btn btn-ghost" id="btnTopo">Consultar topo</button></div>
+      <div class="op-row" style="margin-top:8px"><input id="buscaValor" type="number" placeholder="valor buscar" style="width:120px"><button class="btn btn-ghost" id="btnBuscar">Buscar</button></div>
+      <div class="op-row" style="margin-top:8px"><button class="btn btn-ghost" id="btnPop">Desempilhar (pop)</button><button class="btn btn-ghost" id="btnTopo">Consultar topo</button></div>
     `);
     const pushValor=g1.querySelector('#pushValor');
     const btnPush=g1.querySelector('#btnPush');
@@ -389,20 +395,23 @@ function buildOperations(){
     const btnTopo=g1.querySelector('#btnTopo');
     function updPush(){ setDisabled(btnPush, pushValor.value.trim()==='' || isNaN(parseInt(pushValor.value,10))); }
     function updBus(){ setDisabled(btnBuscar, buscaValor.value.trim()==='' || isNaN(parseInt(buscaValor.value,10))); }
-    function updSem(){ const any=pushValor.value.trim()!==''||buscaValor.value.trim()!==''; setDisabled(btnPop, !any); setDisabled(btnTopo, !any); }
-    pushValor.addEventListener('input', ()=>{ updPush(); updSem(); });
-    buscaValor.addEventListener('input', ()=>{ updBus(); updSem(); });
-    setDisabled(btnPush,true); setDisabled(btnBuscar,true); setDisabled(btnPop,true); setDisabled(btnTopo,true);
+    function updPopTopo(){ const hasStack = appState.lista.length>0; setDisabled(btnPop, !hasStack); setDisabled(btnTopo, !hasStack); }
+    pushValor.addEventListener('input', updPush);
+    buscaValor.addEventListener('input', updBus);
+    setDisabled(btnPush,true); setDisabled(btnBuscar,true);
+    updPopTopo();
     btnPush.addEventListener('click', ()=>{
       const v=parseInt(pushValor.value,10);
       if(isNaN(v)) return alert('Valor?');
       const res=stepsPilhaPush(appState.lista, v, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
+      setTimeout(updPopTopo,0);
     });
     btnPop.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Pilha vazia');
       const res=stepsPilhaPop(appState.lista, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
+      setTimeout(updPopTopo,0);
     });
     btnTopo.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Pilha vazia');
