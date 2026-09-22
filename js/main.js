@@ -43,6 +43,9 @@ const btnPrev = document.getElementById('btnPrev');
 const btnNext = document.getElementById('btnNext');
 const btnPlay = document.getElementById('btnPlay');
 const btnReset = document.getElementById('btnReset');
+const avatarImg = document.getElementById('avatarImg');
+const avatarLabel = document.getElementById('avatarLabel');
+const speechBubble = document.querySelector('.speech-bubble');
 
 const { updateHighlight } = initEditor({ textarea, gutter, highlightEl });
 
@@ -81,6 +84,31 @@ function extractInitialValues(code, tipo){
     }
   }
   return vals;
+}
+
+// avatares dinamicos
+const avatarMap = {
+  acenando: 'Avatares/acenando.png',
+  pensando: 'Avatares/pensando.png',
+  computador: 'Avatares/usando_computador.png',
+  joinha: 'Avatares/joinha.png',
+  comemorando: 'Avatares/comemorando.png',
+  raiva: 'Avatares/raiva.png'
+};
+function getAvatarForStep(step){
+  if(!step) return avatarMap.acenando;
+  const t = ((step.titulo||'') + ' ' + (step.explicacao||'')).toLowerCase();
+  const code = (step.codigo||'').toLowerCase();
+  if(step.notFound || t.includes('não encontrado') || t.includes('nao encontrado') || t.includes('não existe') || t.includes('vazia') || t.includes('nada a remover')) return avatarMap.raiva;
+  if(step.found || t.includes('encontrado!') || step.resultadoParcial){
+    const isLast = history.index === history.steps.length-1;
+    return isLast ? avatarMap.comemorando : avatarMap.joinha;
+  }
+  if(step.tempNode !== undefined || t.includes('malloc') || t.includes('criar novo') || t.includes('alocar') || code.includes('malloc')) return avatarMap.computador;
+  if(step.highlightIndex !== undefined || step.activeValue !== undefined || t.includes('percorrer') || t.includes('comparar') || t.includes('localizar') || t.includes('buscar')) return avatarMap.pensando;
+  if(t.includes('atualizar') || t.includes('encadear') || t.includes('inserir') || t.includes('reorganizar') || t.includes('bypass')) return avatarMap.joinha;
+  if(history.index===0) return avatarMap.acenando;
+  return avatarMap.pensando;
 }
 
 // helpers for blur/disabled
@@ -586,8 +614,28 @@ function renderCurrent(stepOverride){
     stepCode.textContent = step.codigo||'';
     stepExplanation.textContent = step.explicacao||'';
     stepPointers.textContent = step.ponteirosAlterados ? `Ponteiros: ${step.ponteirosAlterados}` : '';
+    if(avatarImg){
+      const src = getAvatarForStep(step);
+      avatarImg.src = src;
+      avatarImg.alt = step.titulo || 'Avatar';
+      if(speechBubble){
+        speechBubble.classList.remove('thinking','success','error','warning');
+        if(src.includes('pensando')) speechBubble.classList.add('thinking');
+        else if(src.includes('raiva')) speechBubble.classList.add('error');
+        else if(src.includes('comemorando')||src.includes('joinha')) speechBubble.classList.add('success');
+        else if(src.includes('computador')) speechBubble.classList.add('warning');
+      }
+      if(avatarLabel){
+        if(src.includes('raiva')) avatarLabel.textContent = 'Ops!';
+        else if(src.includes('comemorando')) avatarLabel.textContent = 'Consegui!';
+        else if(src.includes('pensando')) avatarLabel.textContent = 'Hmm...';
+        else if(src.includes('computador')) avatarLabel.textContent = 'Criando...';
+        else avatarLabel.textContent = 'VisualizaC';
+      }
+    }
   } else {
     stepInfo.classList.add('hidden');
+    if(avatarImg) avatarImg.src = avatarMap.acenando;
   }
 }
 
