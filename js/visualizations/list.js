@@ -149,14 +149,15 @@ export function renderLista(container, snapshot, meta, step){
         const xHead=(rHead.left + rHead.width/2)-rInner.left;
         const yHeadTop=rHead.top - rInner.top - 6;
         const yHeadBottom=rHead.bottom - rInner.top + 4;
-        // bem arejado: gap 28 entre chegadas, midY mais alto
+        // bem arejado: L por cima rasante (12px) para inicio→antigo, sem cruzar nó
         const midY = yNovoTop - 20;
         const xHeadInicio = xHead - 14;
         const xHeadNovo = xHead + 14;
-        // inicio -> novo : L bem espaçado
+        const topY = Math.min(yInicio, yHeadTop) - 12; // rasante por cima
+        // inicio -> novo : L por baixo (mantido)
         pInicioNovo.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${midY} L ${xNovo} ${midY} L ${xNovo} ${yNovoTop}`);
-        // inicio -> head (tracejado) : chegada esquerda
-        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHeadInicio} ${midY}, ${xHeadInicio} ${yHeadTop}`);
+        // inicio -> head (tracejado) : L por cima rasante
+        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${topY} L ${xHeadInicio} ${topY} L ${xHeadInicio} ${yHeadTop}`);
         // novo -> head : S bem arejado para image_certa (novo embaixo centralizado, S para direita)
         const yNovoMid = yNovoTop + 22;
         const xNovoRight = xHead + 64;
@@ -171,12 +172,12 @@ export function renderLista(container, snapshot, meta, step){
     return;
   }
 
-  // caso normal (não bifurcado)
+  // caso normal (não bifurcado) - inicio lateral → para o lado (pedido)
   const wrap = document.createElement('div');
   wrap.className='nodes-row';
   const inicioCol = document.createElement('div');
-  inicioCol.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;margin-right:4px';
-  inicioCol.innerHTML = `<span class="pointer-label">${meta.ponteiros.inicio||'inicio'}<span class="pointer-arrow">↓</span></span>`;
+  inicioCol.style.cssText='display:flex;flex-direction:row;align-items:center;gap:6px;margin-right:10px;min-width:78px';
+  inicioCol.innerHTML = `<span class="pointer-label" style="flex-direction:row;gap:6px">${meta.ponteiros.inicio||'inicio'} <span style="color:var(--accent)">→</span></span>`;
   wrap.appendChild(inicioCol);
   snapshot.forEach((valor, idx)=>{
     const node = document.createElement('div');

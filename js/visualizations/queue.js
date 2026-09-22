@@ -135,8 +135,9 @@ export function renderFila(container, snapshot, meta, step){
         const midY = yNovoTop - 20;
         const xHeadInicio = xHead - 14;
         const xHeadNovo = xHead + 14;
+        const topY = Math.min(yInicio, yHeadTop) - 12;
         pInicioNovo.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${midY} L ${xNovo} ${midY} L ${xNovo} ${yNovoTop}`);
-        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHeadInicio} ${midY}, ${xHeadInicio} ${yHeadTop}`);
+        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${topY} L ${xHeadInicio} ${topY} L ${xHeadInicio} ${yHeadTop}`);
         const yNovoMid = yNovoTop + 22;
         const xNovoRight = xHead + 64;
         pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xNovoRight+28} ${yNovoMid}, ${xHeadNovo+28} ${yHeadBottom - 10}, ${xHeadNovo} ${yHeadBottom}`);
@@ -148,12 +149,12 @@ export function renderFila(container, snapshot, meta, step){
     return;
   }
 
-  // normal
+  // normal - inicio lateral
   const wrap = document.createElement('div');
   wrap.className='nodes-row';
   const inicioCol = document.createElement('div');
-  inicioCol.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;margin-right:6px';
-  inicioCol.innerHTML = `<span class="pointer-label" style="color:var(--accent)">${meta.ponteiros.inicio||'inicio'}<span class="pointer-arrow">↓</span></span>`;
+  inicioCol.style.cssText='display:flex;flex-direction:row;align-items:center;gap:6px;margin-right:10px;min-width:78px';
+  inicioCol.innerHTML = `<span class="pointer-label" style="flex-direction:row;gap:6px;color:var(--accent)">${meta.ponteiros.inicio||'inicio'} <span style="color:var(--accent)">→</span></span>`;
   wrap.appendChild(inicioCol);
   snapshot.forEach((valor, idx)=>{
     const node = document.createElement('div');
