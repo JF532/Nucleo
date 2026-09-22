@@ -75,9 +75,9 @@ export function renderDupla(container, snapshot, meta, step){
     row.appendChild(nullRight);
     inner.appendChild(row);
 
-    // novo embaixo
+    // novo embaixo, centralizado sob head (image_certa)
     const below=document.createElement('div');
-    below.style.cssText='display:flex;align-items:center;gap:18px;margin-top:18px;margin-left:96px';
+    below.style.cssText='display:flex;align-items:center;gap:18px;margin-top:28px;position:relative;left:0';
     below.id='fork-below-double';
     const novoNode=document.createElement('div');
     novoNode.className='node';
@@ -130,9 +130,17 @@ export function renderDupla(container, snapshot, meta, step){
         const rNovo=document.getElementById('fork-novo-box-double')?.getBoundingClientRect();
         const rHead=document.getElementById('fork-head-box-double')?.getBoundingClientRect();
         if(!rInicio||!rNovo||!rHead) return;
+        // centralizar novo embaixo sob o head (image_certa)
+        const belowEl2=document.getElementById('fork-below-double');
+        if(belowEl2){
+          const desiredLeft = (rHead.left + rHead.width/2 - rNovo.width/2) - rInner.left;
+          const actualLeft = (rNovo.left) - rInner.left;
+          const delta = desiredLeft - actualLeft;
+          belowEl2.style.left = delta + 'px';
+        }
         const xInicio=(rInicio.left + rInicio.width/2)-rInner.left;
         const yInicio=rInicio.bottom - rInner.top + 2;
-        const xNovo=(rNovo.left + rNovo.width/2)-rInner.left;
+        const xNovo=(rHead.left + rHead.width/2)-rInner.left;
         const yNovoTop=rNovo.top - rInner.top - 6;
         const xHead=(rHead.left + rHead.width/2)-rInner.left;
         const yHeadTop=rHead.top - rInner.top - 6;
@@ -142,9 +150,9 @@ export function renderDupla(container, snapshot, meta, step){
         const xHeadNovo = xHead + 14;
         pInicioNovo.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${midY} L ${xNovo} ${midY} L ${xNovo} ${yNovoTop}`);
         pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHeadInicio} ${midY}, ${xHeadInicio} ${yHeadTop}`);
-        const xNovoRight = (rNovo.right) - rInner.left;
-        const yNovoMid = (rNovo.top + rNovo.height/2) - rInner.top;
-        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHeadNovo-30} ${yNovoMid}, ${xHeadNovo} ${yHeadBottom - 10}, ${xHeadNovo} ${yHeadBottom}`);
+        const yNovoMid = yNovoTop + 22;
+        const xNovoRight = xHead + 64;
+        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xNovoRight+28} ${yNovoMid}, ${xHeadNovo+28} ${yHeadBottom - 10}, ${xHeadNovo} ${yHeadBottom}`);
         const maxY=Math.max(yInicio,yNovoTop,yHeadTop)+50;
         svg.setAttribute('height', maxY+20); svg.style.height=(maxY+20)+'px';
         inner.style.minHeight=(maxY+60)+'px';

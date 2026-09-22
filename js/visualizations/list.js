@@ -72,9 +72,10 @@ export function renderLista(container, snapshot, meta, step){
 
     inner.appendChild(row);
 
-    // Linha inferior: novo embaixo, alinhado sob o antigo inicio (head) - bem arejado
+    // Linha inferior: novo embaixo, centralizado sob o head (image_certa) - bem arejado
     const below=document.createElement('div');
-    below.style.cssText='display:flex;align-items:center;gap:18px;margin-top:18px;margin-left:96px';
+    below.style.cssText='display:flex;align-items:center;gap:18px;margin-top:28px;position:relative;left:0';
+    below.id='fork-below-row';
     below.id='fork-below-row';
     const novoNode=document.createElement('div');
     novoNode.className='node';
@@ -130,9 +131,19 @@ export function renderLista(container, snapshot, meta, step){
         const rNovo=document.getElementById('fork-novo-box')?.getBoundingClientRect();
         const rHead=document.getElementById('fork-head-box')?.getBoundingClientRect();
         if(!rInicio||!rNovo||!rHead) return;
+        // centralizar novo embaixo sob o head (image_certa)
+        const belowEl=document.getElementById('fork-below-row');
+        if(belowEl){
+          const desiredLeft = (rHead.left + rHead.width/2 - rNovo.width/2) - rInner.left;
+          const actualLeft = (rNovo.left) - rInner.left;
+          const delta = desiredLeft - actualLeft;
+          belowEl.style.left = delta + 'px';
+          // re-medir após shift para SVG preciso (usar head center como novo center)
+        }
         const xInicio=(rInicio.left + rInicio.width/2)-rInner.left;
         const yInicio=rInicio.bottom - rInner.top + 2;
-        const xNovo=(rNovo.left + rNovo.width/2)-rInner.left;
+        // após centralizar, xNovo = xHead
+        const xNovo=(rHead.left + rHead.width/2)-rInner.left;
         const yNovoTop=rNovo.top - rInner.top - 6;
         const yNovoBottom=rNovo.top - rInner.top - 6; // top of novo
         const xHead=(rHead.left + rHead.width/2)-rInner.left;
@@ -146,10 +157,10 @@ export function renderLista(container, snapshot, meta, step){
         pInicioNovo.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${midY} L ${xNovo} ${midY} L ${xNovo} ${yNovoTop}`);
         // inicio -> head (tracejado) : chegada esquerda
         pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHeadInicio} ${midY}, ${xHeadInicio} ${yHeadTop}`);
-        // novo -> head : chegada direita, espaçado
-        const xNovoRight = (rNovo.right) - rInner.left;
-        const yNovoMid = (rNovo.top + rNovo.height/2) - rInner.top;
-        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHeadNovo-30} ${yNovoMid}, ${xHeadNovo} ${yHeadBottom - 10}, ${xHeadNovo} ${yHeadBottom}`);
+        // novo -> head : S bem arejado para image_certa (novo embaixo centralizado, S para direita)
+        const yNovoMid = yNovoTop + 22;
+        const xNovoRight = xHead + 64;
+        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xNovoRight+28} ${yNovoMid}, ${xHeadNovo+28} ${yHeadBottom - 10}, ${xHeadNovo} ${yHeadBottom}`);
         const maxY = Math.max(yInicio, yNovoTop, yHeadTop) + 50;
         svg.setAttribute('height', maxY+20);
         svg.style.height = (maxY+20)+'px';
