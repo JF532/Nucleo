@@ -52,6 +52,37 @@ let history=new History();
 let appState = { lista:[], arvore:null };
 let isBST=false;
 
+// extrai valores iniciais do codigo do usuario (ex: empilhar(10); empilhar(20); empilhar(40);)
+function extractInitialValues(code, tipo){
+  const vals=[];
+  // procura chamadas com numero literal: func(  123 )
+  const reGeral = /(?:empilhar|push|enfileirar|enqueue|inserir|inserir_inicio|inserir_fim|inserir_meio)\s*\(\s*(-?\d+)\s*(?:,|\))/gi;
+  let m;
+  while((m=reGeral.exec(code))!==null){
+    vals.push(parseInt(m[1],10));
+  }
+  // fallback: se for main com numeros soltos tipo empilhar(40) ja pega; se nada, tenta pegar qualquer numero em chamada de funcao com 1 arg dentro de main
+  if(vals.length===0){
+    // tenta pegar todos os numeros em chamadas tipo nome( numero )
+    const reMain = /\b\w+\s*\(\s*(-?\d+)\s*\)\s*;/g;
+    // filtrar apenas se o codigo parece ter pilha/fila: pegar apenas os primeiros 20 valores para nao pegar lixo
+    const tmp=[];
+    let mm;
+    while((mm=reMain.exec(code))!==null){
+      // ignora malloc(sizeof) etc - ja filtra por ter apenas numero
+      tmp.push(parseInt(mm[1],10));
+      if(tmp.length>20) break;
+    }
+    // se tmp tiver valores e o codigo contem empilhar/push/enqueue, usar tmp
+    if(tmp.length>0 && /(empilhar|push|enqueue|enfileirar|inserir)/i.test(code)){
+      // para pilha, o ultimo empilhado deve ser o topo (primeiro da lista)
+      // vamos manter ordem de aparecimento e inverter para pilha
+      return tmp.slice(0,20);
+    }
+  }
+  return vals;
+}
+
 // helpers for blur/disabled
 function setDisabled(btn, disabled){
   if(!btn) return;
@@ -134,23 +165,51 @@ btnAnalyze.addEventListener('click', ()=>{
     return;
   }
 
+  // resetar estado anterior (corrige persistencia ao trocar codigo)
+  history.stop();
+  history.setSteps([]);
+  history.index=-1;
+  // limpar visualizacao anterior
+  if(stepInfo) stepInfo.classList.add('hidden');
+  if(stepCounter) stepCounter.textContent='';
+
   currentMeta = result.meta;
   currentTipo = result.tipo;
   isBST = result.tipo==='bst';
+  // extrair valores reais do codigo do usuario, se houver
+  const extracted = extractInitialValues(code, currentTipo);
   if(['lista_simples','lista_dupla','pilha','fila'].includes(currentTipo)){
-    appState.lista = [10,20,30];
+    if(extracted.length>0){
+      if(currentTipo==='pilha'){
+        // pilha: ultimo empilhado é topo -> inverter ordem de aparecimento
+        appState.lista = [...extracted].reverse();
+      } else {
+        appState.lista = [...extracted];
+      }
+    } else {
+      // fallback demo apenas se o codigo for um dos exemplos (contem struct mas sem chamadas com valor)
+      // para codigo custom sem valores, comeca vazio para nao confundir
+      const isExampleCode = Object.values(examples).some(ex => code.trim()===ex.trim());
+      appState.lista = isExampleCode ? [10,20,30] : [];
+      // se for pilha custom sem valores, manter vazio para usuario inserir
+      if(!isExampleCode && extracted.length===0) appState.lista = [];
+    }
     appState.arvore = null;
   } else {
     appState.lista = [];
     let root=null;
-    const vals=[50,30,70,20,40,60,80];
     function insert(root,v){
       if(!root) return {valor:v,esq:null,dir:null};
       if(v < root.valor) root.esq = insert(root.esq,v);
       else root.dir = insert(root.dir,v);
       return root;
     }
-    vals.forEach(v=> root=insert(root,v));
+    if(extracted.length>0){
+      extracted.forEach(v=> root=insert(root,v));
+    } else {
+      const vals=[50,30,70,20,40,60,80];
+      vals.forEach(v=> root=insert(root,v));
+    }
     appState.arvore = root;
   }
 
