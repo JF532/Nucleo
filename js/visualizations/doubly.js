@@ -21,33 +21,24 @@ export function renderDupla(container, snapshot, meta, step){
     const inner=document.createElement('div');
     inner.className='visualization-inner';
     inner.style.position='relative';
-    inner.style.paddingTop='22px';
+    inner.style.paddingTop='8px';
     const row=document.createElement('div');
     row.className='nodes-row';
     row.style.position='relative';
-
     const inicioCol=document.createElement('div');
     inicioCol.style.cssText='display:flex;flex-direction:column;align-items:center;gap:2px;margin-right:6px;min-width:56px';
     inicioCol.id='fork-inicio-col-double';
     inicioCol.innerHTML=`<span class="pointer-label" id="fork-inicio-label-double">${meta.ponteiros.inicio||'inicio'}</span>`;
     row.appendChild(inicioCol);
-
-    const tempNode=document.createElement('div');
-    tempNode.className='node';
-    tempNode.id='fork-novo-double';
-    const tempBox=document.createElement('div');
-    tempBox.className='node-box double temp active';
-    tempBox.id='fork-novo-box-double';
-    tempBox.style.minWidth='120px';
-    tempBox.innerHTML=`<div class="node-value" style="font-size:14px">${step.tempNode}</div><div class="node-field" style="font-size:10px;gap:6px"><span>${meta.no.anterior||'ant'} → NULL</span><span>${meta.no.proximo||'prox'} → ${oldHead}</span></div><div class="node-label">novo</div>`;
-    tempNode.appendChild(tempBox);
-    row.appendChild(tempNode);
-
-    const arrowTmp=document.createElement('div');
-    arrowTmp.className='arrow double';
-    arrowTmp.style.opacity='.6';
-    row.appendChild(arrowTmp);
-
+    const nullLeft=document.createElement('div');
+    nullLeft.className='null-box';
+    nullLeft.textContent='NULL';
+    nullLeft.style.marginRight='6px';
+    row.appendChild(nullLeft);
+    const arrowLeft=document.createElement('div');
+    arrowLeft.className='arrow double';
+    arrowLeft.style.width='28px';
+    row.appendChild(arrowLeft);
     snapshot.forEach((valor, idx)=>{
       const node=document.createElement('div');
       node.className='node';
@@ -82,29 +73,54 @@ export function renderDupla(container, snapshot, meta, step){
     nullRight.className='null-box';
     nullRight.textContent='NULL';
     row.appendChild(nullRight);
-
     inner.appendChild(row);
+
+    // novo embaixo
+    const below=document.createElement('div');
+    below.style.cssText='display:flex;align-items:center;gap:12px;margin-top:14px;margin-left:68px';
+    below.id='fork-below-double';
+    const novoNode=document.createElement('div');
+    novoNode.className='node';
+    novoNode.id='fork-novo-double';
+    const novoBox=document.createElement('div');
+    novoBox.className='node-box double temp active';
+    novoBox.id='fork-novo-box-double';
+    novoBox.style.minWidth='120px';
+    novoBox.innerHTML=`<div class="node-value" style="font-size:14px">${step.tempNode}</div><div class="node-field" style="font-size:10px;gap:6px"><span>${meta.no.anterior||'ant'} → NULL</span><span>${meta.no.proximo||'prox'} → ${oldHead}</span></div><div class="node-label">novo</div>`;
+    novoNode.appendChild(novoBox);
+    below.appendChild(novoNode);
+    const novoArrow=document.createElement('div');
+    novoArrow.style.cssText='font-size:11px;color:var(--warning)';
+    novoArrow.innerHTML=`<span style="color:var(--warning)">↗</span> <span style="color:var(--warning)">prox → ${oldHead}</span>`;
+    below.appendChild(novoArrow);
+    inner.appendChild(below);
+
     const svgNS='http://www.w3.org/2000/svg';
     const svg=document.createElementNS(svgNS,'svg');
     svg.classList.add('fork-svg');
-    svg.style.height='48px';
+    svg.style.height='90px';
     svg.style.top='0';
     svg.setAttribute('width','100%');
-    svg.setAttribute('height','48');
+    svg.setAttribute('height','90');
     const defs=document.createElementNS(svgNS,'defs');
-    defs.innerHTML=`<marker id="arrow-accent-double" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8"/></marker><marker id="arrow-warning-double" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/></marker>`;
+    defs.innerHTML=`<marker id="arrow-accent-double2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8"/></marker><marker id="arrow-warning-double2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/></marker>`;
     svg.appendChild(defs);
-    const pInicio=document.createElementNS(svgNS,'path');
-    pInicio.setAttribute('class','fork-path inicio');
-    pInicio.setAttribute('marker-end','url(#arrow-accent-double)');
-    const pNovo=document.createElementNS(svgNS,'path');
-    pNovo.setAttribute('class','fork-path novo');
-    pNovo.setAttribute('marker-end','url(#arrow-warning-double)');
-    svg.appendChild(pInicio); svg.appendChild(pNovo);
+    const pInicioNovo=document.createElementNS(svgNS,'path');
+    pInicioNovo.setAttribute('class','fork-path inicio');
+    pInicioNovo.setAttribute('marker-end','url(#arrow-accent-double2)');
+    const pInicioHead=document.createElementNS(svgNS,'path');
+    pInicioHead.setAttribute('class','fork-path inicio');
+    pInicioHead.setAttribute('marker-end','url(#arrow-accent-double2)');
+    pInicioHead.style.strokeDasharray='5 5';
+    pInicioHead.style.opacity='0.7';
+    const pNovoHead=document.createElementNS(svgNS,'path');
+    pNovoHead.setAttribute('class','fork-path novo');
+    pNovoHead.setAttribute('marker-end','url(#arrow-warning-double2)');
+    svg.appendChild(pInicioNovo); svg.appendChild(pInicioHead); svg.appendChild(pNovoHead);
     inner.appendChild(svg);
     const label=document.createElement('div');
-    label.style.cssText='font-size:10px;color:var(--text-muted);margin-top:4px;margin-left:4px;border-left:2px dashed var(--border);padding-left:8px';
-    label.innerHTML=`<span style="color:var(--accent)">${meta.ponteiros.inicio||'inicio'} → ${oldHead}</span> &nbsp;|&nbsp; <span style="color:#f59e0b">novo → ${oldHead}</span> — próximo: <b style="color:var(--accent)">${meta.ponteiros.inicio||'inicio'} → novo</b> &nbsp; (ant → NULL)`;
+    label.style.cssText='font-size:10px;color:var(--text-muted);margin-top:6px;margin-left:4px;border-left:2px dashed var(--border);padding-left:8px';
+    label.innerHTML=`<span style="color:var(--accent)">${meta.ponteiros.inicio||'inicio'} → novo (L)</span> &nbsp;|&nbsp; <span style="color:var(--accent);opacity:0.7">${meta.ponteiros.inicio||'inicio'} → ${oldHead}</span> &nbsp;|&nbsp; <span style="color:#f59e0b">novo → ${oldHead}</span>`;
     inner.appendChild(label);
     container.appendChild(inner);
     requestAnimationFrame(()=>{
@@ -117,14 +133,19 @@ export function renderDupla(container, snapshot, meta, step){
         const xInicio=(rInicio.left + rInicio.width/2)-rInner.left;
         const yInicio=rInicio.bottom - rInner.top + 2;
         const xNovo=(rNovo.left + rNovo.width/2)-rInner.left;
-        const yNovo=rNovo.bottom - rInner.top + 2;
+        const yNovoTop=rNovo.top - rInner.top - 6;
         const xHead=(rHead.left + rHead.width/2)-rInner.left;
-        const yHead=rHead.top - rInner.top - 4;
-        const jy=yHead-10;
-        pInicio.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${jy}, ${xHead} ${jy}, ${xHead} ${yHead}`);
-        pNovo.setAttribute('d', `M ${xNovo} ${yNovo} C ${xNovo} ${jy}, ${xHead} ${jy}, ${xHead} ${yHead}`);
-        const maxY=Math.max(yInicio,yNovo,yHead)+10;
-        svg.setAttribute('height', maxY); svg.style.height=maxY+'px';
+        const yHeadTop=rHead.top - rInner.top - 6;
+        const yHeadBottom=rHead.bottom - rInner.top + 4;
+        const midY = yNovoTop - 12;
+        pInicioNovo.setAttribute('d', `M ${xInicio} ${yInicio} L ${xInicio} ${midY} L ${xNovo} ${midY} L ${xNovo} ${yNovoTop}`);
+        pInicioHead.setAttribute('d', `M ${xInicio} ${yInicio} C ${xInicio} ${midY}, ${xHead} ${midY}, ${xHead} ${yHeadTop}`);
+        const xNovoRight = (rNovo.right) - rInner.left;
+        const yNovoMid = (rNovo.top + rNovo.height/2) - rInner.top;
+        pNovoHead.setAttribute('d', `M ${xNovoRight} ${yNovoMid} C ${xHead-30} ${yNovoMid}, ${xHead} ${yHeadBottom - 10}, ${xHead} ${yHeadBottom}`);
+        const maxY=Math.max(yInicio,yNovoTop,yHeadTop)+50;
+        svg.setAttribute('height', maxY+20); svg.style.height=(maxY+20)+'px';
+        inner.style.minHeight=(maxY+60)+'px';
       }catch(e){}
     });
     return;
