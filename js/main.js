@@ -49,8 +49,27 @@ const { updateHighlight } = initEditor({ textarea, gutter, highlightEl });
 let currentMeta=null;
 let currentTipo=null;
 let history=new History();
-let appState = { lista:[], arvore:null }; // unified
+let appState = { lista:[], arvore:null };
 let isBST=false;
+
+// helpers for blur/disabled
+function setDisabled(btn, disabled){
+  if(!btn) return;
+  btn.disabled = disabled;
+  btn.classList.toggle('blurred', disabled);
+}
+function resetOpsBlur(){
+  // limpa inputs e volta todos os botoes de operacao para blur
+  operationsDiv.querySelectorAll('input').forEach(i=>{ i.value=''; });
+  const sel = operationsDiv.querySelector('#inMeioPos');
+  if(sel) sel.style.display='none';
+  const selPos = operationsDiv.querySelector('#inPos');
+  if(selPos) selPos.value='inicio';
+  // desabilita todos os botoes de operacao
+  operationsDiv.querySelectorAll('.btn').forEach(b=> setDisabled(b,true));
+  // re-avalia botoes que nao precisam de input (ex: pop/dequeue) - mantem blur ate novo valor conforme requisito
+  // eles ficarao blurred ate o usuario digitar novamente
+}
 
 // memory toggle
 memoryToggle.addEventListener('click', ()=>{
@@ -82,12 +101,12 @@ btnAnalyze.addEventListener('click', ()=>{
   const code = textarea.value;
   const result = analyze(code);
   console.log('[analyzer]', result);
-  // show banner
+  // show banner - apenas label, sem descricao explicativa (requisito)
   detectionBanner.classList.remove('hidden','ambiguous');
   if(result.tipo){
     detectionBanner.classList.remove('ambiguous');
     detectionTitle.textContent = '✓ Estrutura detectada';
-    detectionDesc.innerHTML = `<b style="color:var(--accent);font-size:16px">${result.label}</b><br>${result.descricao}`;
+    detectionDesc.innerHTML = `<b style="color:var(--accent);font-size:16px">${result.label}</b>`;
   } else {
     detectionBanner.classList.add('ambiguous');
     detectionTitle.textContent = '⚠ Não identificado com segurança';
@@ -105,7 +124,6 @@ btnAnalyze.addEventListener('click', ()=>{
     detectionAmbiguous.classList.add('hidden');
   }
 
-  // analyzed code
   analyzedCode.querySelector('code').textContent = code || '// (vazio)';
   if(typeof window.hljs !== 'undefined') {
     try{ window.hljs.highlightElement(analyzedCode.querySelector('code')); } catch(e){}
@@ -119,17 +137,13 @@ btnAnalyze.addEventListener('click', ()=>{
   currentMeta = result.meta;
   currentTipo = result.tipo;
   isBST = result.tipo==='bst';
-  // reset state with demo data
   if(['lista_simples','lista_dupla','pilha','fila'].includes(currentTipo)){
     appState.lista = [10,20,30];
     appState.arvore = null;
   } else {
     appState.lista = [];
-    // build demo tree: 50,30,70,20,40,60,80
     let root=null;
     const vals=[50,30,70,20,40,60,80];
-    // use BST insert for both to get balanced demo, but for arvore_binaria still show same shape
-    // We'll construct via isBST logic using steps logic? simple manual
     function insert(root,v){
       if(!root) return {valor:v,esq:null,dir:null};
       if(v < root.valor) root.esq = insert(root.esq,v);
@@ -142,8 +156,8 @@ btnAnalyze.addEventListener('click', ()=>{
 
   workspace.classList.remove('hidden');
   buildOperations();
-  // initial render without steps
   renderCurrent(null);
+  updateControls();
 });
 
 function buildOperations(){
@@ -165,47 +179,80 @@ function buildOperations(){
       <div class="op-row" style="margin-top:8px"><input id="remPos" type="number" placeholder="pos (0..n)"><button class="btn btn-ghost" id="btnRemover">Remover</button><button class="btn btn-ghost" id="btnRemIni">Remover início</button><button class="btn btn-ghost" id="btnRemFim">Remover fim</button></div>
       <div class="op-row" style="margin-top:8px"><input id="buscaValor" type="number" placeholder="buscar valor"><button class="btn btn-ghost" id="btnBuscar">Buscar</button></div>
     `);
-    g1.querySelector('#inPos').addEventListener('change', (e)=>{
+    const inValor=g1.querySelector('#inValor');
+    const inPos=g1.querySelector('#inPos');
+    const inMeioPos=g1.querySelector('#inMeioPos');
+    const btnInserir=g1.querySelector('#btnInserir');
+    const remPos=g1.querySelector('#remPos');
+    const btnRemover=g1.querySelector('#btnRemover');
+    const btnRemIni=g1.querySelector('#btnRemIni');
+    const btnRemFim=g1.querySelector('#btnRemFim');
+    const buscaValor=g1.querySelector('#buscaValor');
+    const btnBuscar=g1.querySelector('#btnBuscar');
+
+    function updateInserir(){
+      const hasValor = inValor.value.trim()!=='' && !isNaN(parseInt(inValor.value,10));
+      const isMeio = inPos.value==='meio';
+      const hasPos = !isMeio || (inMeioPos.value.trim()!=='' && !isNaN(parseInt(inMeioPos.value,10)));
+      setDisabled(btnInserir, !(hasValor && hasPos));
+    }
+    function updateRemover(){ setDisabled(btnRemover, remPos.value.trim()==='' || isNaN(parseInt(remPos.value,10))); }
+    function updateBuscar(){ setDisabled(btnBuscar, buscaValor.value.trim()==='' || isNaN(parseInt(buscaValor.value,10))); }
+    // botoes sem input mantem blurred ate haver valor em algum input (requisito)
+    function updateSemInput(){
+      const anyHas = inValor.value.trim()!=='' || remPos.value.trim()!=='' || buscaValor.value.trim()!=='';
+      // Se nenhum input preenchido, blur tambem nos sem-input
+      if(!anyHas){ setDisabled(btnRemIni,true); setDisabled(btnRemFim,true); }
+      else { setDisabled(btnRemIni,false); setDisabled(btnRemFim,false); }
+    }
+    [inValor,inPos,inMeioPos].forEach(el=>{ el.addEventListener('input', ()=>{ updateInserir(); updateSemInput(); }); el.addEventListener('change', ()=>{ updateInserir(); updateSemInput(); }); });
+    remPos.addEventListener('input', ()=>{ updateRemover(); updateSemInput(); });
+    buscaValor.addEventListener('input', ()=>{ updateBuscar(); updateSemInput(); });
+    // init state blurred
+    setDisabled(btnInserir,true); setDisabled(btnRemover,true); setDisabled(btnBuscar,true);
+    setDisabled(btnRemIni,true); setDisabled(btnRemFim,true);
+
+    inPos.addEventListener('change', (e)=>{
       const show = e.target.value==='meio';
-      g1.querySelector('#inMeioPos').style.display = show?'block':'none';
+      inMeioPos.style.display = show?'block':'none';
+      updateInserir();
     });
-    g1.querySelector('#btnInserir').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#inValor').value,10);
+    btnInserir.addEventListener('click', ()=>{
+      const v=parseInt(inValor.value,10);
       if(isNaN(v)) return alert('Informe valor numérico');
-      const posSel=g1.querySelector('#inPos').value;
+      const posSel=inPos.value;
       let res;
       if(posSel==='inicio') res=stepsListaInserirInicio(appState.lista, v, meta);
       else if(posSel==='fim') res=stepsListaInserirFim(appState.lista, v, meta);
       else {
-        const p=parseInt(g1.querySelector('#inMeioPos').value,10);
+        const p=parseInt(inMeioPos.value,10);
         if(isNaN(p)) return alert('Informe posição para inserção no meio');
         res=stepsListaInserirMeio(appState.lista, v, p, meta);
       }
       appState.lista = res.newState;
       startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnRemIni').addEventListener('click', ()=>{
+    btnRemIni.addEventListener('click', ()=>{
       const res=stepsListaRemoverInicio(appState.lista, meta);
       appState.lista=res.newState;
       startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnRemFim').addEventListener('click', ()=>{
+    btnRemFim.addEventListener('click', ()=>{
       const res=stepsListaRemoverFim(appState.lista, meta);
       appState.lista=res.newState;
       startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnRemover').addEventListener('click', ()=>{
-      const p=parseInt(g1.querySelector('#remPos').value,10);
+    btnRemover.addEventListener('click', ()=>{
+      const p=parseInt(remPos.value,10);
       if(isNaN(p)) return alert('Informe posição');
       const res=stepsListaRemoverMeio(appState.lista, p, meta);
       appState.lista=res.newState;
       startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnBuscar').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#buscaValor').value,10);
+    btnBuscar.addEventListener('click', ()=>{
+      const v=parseInt(buscaValor.value,10);
       if(isNaN(v)) return alert('Informe valor');
       const res=stepsBusca(appState.lista, v);
-      // busca não altera estado
       startSteps(res.steps, appState.lista, true);
     });
 
@@ -215,40 +262,56 @@ function buildOperations(){
       <div class="op-row" style="margin-top:8px"><input id="remPos" type="number" placeholder="pos"><button class="btn btn-ghost" id="btnRemover">Remover</button><button class="btn btn-ghost" id="btnRemIni">Remover início</button><button class="btn btn-ghost" id="btnRemFim">Remover fim</button></div>
       <div class="op-row" style="margin-top:8px"><input id="buscaValor" type="number" placeholder="buscar"><button class="btn btn-ghost" id="btnBuscar">Buscar</button></div>
     `);
-    g1.querySelector('#inPos').addEventListener('change', e=>{
-      g1.querySelector('#inMeioPos').style.display = e.target.value==='meio'?'block':'none';
-    });
-    g1.querySelector('#btnInserir').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#inValor').value,10);
+    const inValor=g1.querySelector('#inValor');
+    const inPos=g1.querySelector('#inPos');
+    const inMeioPos=g1.querySelector('#inMeioPos');
+    const btnInserir=g1.querySelector('#btnInserir');
+    const remPos=g1.querySelector('#remPos');
+    const btnRemover=g1.querySelector('#btnRemover');
+    const btnRemIni=g1.querySelector('#btnRemIni');
+    const btnRemFim=g1.querySelector('#btnRemFim');
+    const buscaValor=g1.querySelector('#buscaValor');
+    const btnBuscar=g1.querySelector('#btnBuscar');
+    function updIns(){ const hasV=inValor.value.trim()!=='' && !isNaN(parseInt(inValor.value,10)); const isMeio=inPos.value==='meio'; const hasP=!isMeio || (inMeioPos.value.trim()!=='' && !isNaN(parseInt(inMeioPos.value,10))); setDisabled(btnInserir, !(hasV&&hasP)); }
+    function updRem(){ setDisabled(btnRemover, remPos.value.trim()==='' || isNaN(parseInt(remPos.value,10))); }
+    function updBus(){ setDisabled(btnBuscar, buscaValor.value.trim()==='' || isNaN(parseInt(buscaValor.value,10))); }
+    function updSem(){ const any=inValor.value.trim()!==''||remPos.value.trim()!==''||buscaValor.value.trim()!==''; setDisabled(btnRemIni, !any); setDisabled(btnRemFim, !any); }
+    [inValor,inPos,inMeioPos].forEach(el=>{ el.addEventListener('input', ()=>{updIns(); updSem();}); el.addEventListener('change', ()=>{updIns(); updSem();}); });
+    remPos.addEventListener('input', ()=>{updRem(); updSem();});
+    buscaValor.addEventListener('input', ()=>{updBus(); updSem();});
+    setDisabled(btnInserir,true); setDisabled(btnRemover,true); setDisabled(btnBuscar,true); setDisabled(btnRemIni,true); setDisabled(btnRemFim,true);
+    inPos.addEventListener('change', e=>{ inMeioPos.style.display = e.target.value==='meio'?'block':'none'; updIns(); });
+    btnInserir.addEventListener('click', ()=>{
+      const v=parseInt(inValor.value,10);
       if(isNaN(v)) return alert('Valor?');
-      const sel=g1.querySelector('#inPos').value;
+      const sel=inPos.value;
       let res;
       if(sel==='inicio') res=stepsListaInserirInicio(appState.lista, v, meta);
       else if(sel==='fim') res=stepsListaInserirFim(appState.lista, v, meta);
       else {
-        const p=parseInt(g1.querySelector('#inMeioPos').value,10);
+        const p=parseInt(inMeioPos.value,10);
         if(isNaN(p)) return alert('Posição?');
         res=stepsDuplaInserirMeio(appState.lista, v, p, meta);
       }
       appState.lista=res.newState;
       startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnRemIni').addEventListener('click', ()=>{
+    btnRemIni.addEventListener('click', ()=>{
       const res=stepsListaRemoverInicio(appState.lista, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnRemFim').addEventListener('click', ()=>{
+    btnRemFim.addEventListener('click', ()=>{
       const res=stepsListaRemoverFim(appState.lista, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnRemover').addEventListener('click', ()=>{
-      const p=parseInt(g1.querySelector('#remPos').value,10);
+    btnRemover.addEventListener('click', ()=>{
+      const p=parseInt(remPos.value,10);
       if(isNaN(p)) return alert('Posição?');
       const res=stepsListaRemoverMeio(appState.lista,p,meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnBuscar').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#buscaValor').value,10);
+    btnBuscar.addEventListener('click', ()=>{
+      const v=parseInt(buscaValor.value,10);
       if(isNaN(v)) return alert('Valor?');
       const res=stepsBusca(appState.lista,v);
       startSteps(res.steps, appState.lista, true);
@@ -257,26 +320,38 @@ function buildOperations(){
   } else if(tipo==='pilha'){
     const g1=addGroup('Pilha (LIFO)', `
       <div class="op-row"><input id="pushValor" type="number" placeholder="valor"><button class="btn btn-primary" id="btnPush">Empilhar (push)</button></div>
-      <div class="op-row" style="margin-top:8px"><button class="btn btn-ghost" id="btnPop">Desempilhar (pop)</button><button class="btn btn-ghost" id="btnTopo">Consultar topo</button><button class="btn btn-ghost" id="btnBuscar">Buscar</button><input id="buscaValor" type="number" placeholder="valor buscar" style="width:120px"></div>
+      <div class="op-row" style="margin-top:8px"><input id="buscaValor" type="number" placeholder="valor buscar" style="width:120px"><button class="btn btn-ghost" id="btnBuscar">Buscar</button><button class="btn btn-ghost" id="btnPop">Desempilhar (pop)</button><button class="btn btn-ghost" id="btnTopo">Consultar topo</button></div>
     `);
-    g1.querySelector('#btnPush').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#pushValor').value,10);
+    const pushValor=g1.querySelector('#pushValor');
+    const btnPush=g1.querySelector('#btnPush');
+    const buscaValor=g1.querySelector('#buscaValor');
+    const btnBuscar=g1.querySelector('#btnBuscar');
+    const btnPop=g1.querySelector('#btnPop');
+    const btnTopo=g1.querySelector('#btnTopo');
+    function updPush(){ setDisabled(btnPush, pushValor.value.trim()==='' || isNaN(parseInt(pushValor.value,10))); }
+    function updBus(){ setDisabled(btnBuscar, buscaValor.value.trim()==='' || isNaN(parseInt(buscaValor.value,10))); }
+    function updSem(){ const any=pushValor.value.trim()!==''||buscaValor.value.trim()!==''; setDisabled(btnPop, !any); setDisabled(btnTopo, !any); }
+    pushValor.addEventListener('input', ()=>{ updPush(); updSem(); });
+    buscaValor.addEventListener('input', ()=>{ updBus(); updSem(); });
+    setDisabled(btnPush,true); setDisabled(btnBuscar,true); setDisabled(btnPop,true); setDisabled(btnTopo,true);
+    btnPush.addEventListener('click', ()=>{
+      const v=parseInt(pushValor.value,10);
       if(isNaN(v)) return alert('Valor?');
       const res=stepsPilhaPush(appState.lista, v, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnPop').addEventListener('click', ()=>{
+    btnPop.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Pilha vazia');
       const res=stepsPilhaPop(appState.lista, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnTopo').addEventListener('click', ()=>{
+    btnTopo.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Pilha vazia');
       const steps=[{titulo:'Consultar topo',codigo:`int v = topo->${meta.no.valor||'valor'};`,explicacao:`Topo da pilha é ${appState.lista[0]}.`,ponteirosAlterados:meta.ponteiroPrincipal||'topo',snapshot:[...appState.lista],highlightIndex:0}];
       startSteps(steps, appState.lista, true);
     });
-    g1.querySelector('#btnBuscar').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#buscaValor').value,10);
+    btnBuscar.addEventListener('click', ()=>{
+      const v=parseInt(buscaValor.value,10);
       if(isNaN(v)) return alert('Valor?');
       const res=stepsBusca(appState.lista,v);
       startSteps(res.steps, appState.lista, true);
@@ -285,32 +360,68 @@ function buildOperations(){
   } else if(tipo==='fila'){
     const g1=addGroup('Fila (FIFO)', `
       <div class="op-row"><input id="enqValor" type="number" placeholder="valor"><button class="btn btn-primary" id="btnEnq">Enfileirar (enqueue)</button></div>
-      <div class="op-row" style="margin-top:8px"><button class="btn btn-ghost" id="btnDeq">Desenfileirar (dequeue)</button><button class="btn btn-ghost" id="btnInicio">Consultar início</button><button class="btn btn-ghost" id="btnFim">Consultar fim</button></div>
-      <div class="op-row" style="margin-top:8px"><input id="buscaValor" type="number" placeholder="buscar"><button class="btn btn-ghost" id="btnBuscar">Buscar</button></div>
+      <div class="op-row" style="margin-top:8px"><input id="remValorFila" type="number" placeholder="valor a remover"><button class="btn btn-ghost" id="btnRemValor">Remover valor</button><button class="btn btn-ghost" id="btnDeq">Desenfileirar (dequeue)</button></div>
+      <div class="op-row" style="margin-top:8px"><input id="buscaValor" type="number" placeholder="buscar"><button class="btn btn-ghost" id="btnBuscar">Buscar</button><button class="btn btn-ghost" id="btnInicio">Consultar início</button><button class="btn btn-ghost" id="btnFim">Consultar fim</button></div>
     `);
-    g1.querySelector('#btnEnq').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#enqValor').value,10);
+    const enqValor=g1.querySelector('#enqValor');
+    const btnEnq=g1.querySelector('#btnEnq');
+    const remValorFila=g1.querySelector('#remValorFila');
+    const btnRemValor=g1.querySelector('#btnRemValor');
+    const btnDeq=g1.querySelector('#btnDeq');
+    const buscaValor=g1.querySelector('#buscaValor');
+    const btnBuscar=g1.querySelector('#btnBuscar');
+    const btnInicio=g1.querySelector('#btnInicio');
+    const btnFim=g1.querySelector('#btnFim');
+    function updEnq(){ setDisabled(btnEnq, enqValor.value.trim()==='' || isNaN(parseInt(enqValor.value,10))); }
+    function updRem(){ setDisabled(btnRemValor, remValorFila.value.trim()==='' || isNaN(parseInt(remValorFila.value,10))); }
+    function updBus(){ setDisabled(btnBuscar, buscaValor.value.trim()==='' || isNaN(parseInt(buscaValor.value,10))); }
+    function updSem(){
+      const any = enqValor.value.trim()!=='' || remValorFila.value.trim()!=='' || buscaValor.value.trim()!=='';
+      setDisabled(btnDeq, !any);
+      setDisabled(btnInicio, !any);
+      setDisabled(btnFim, !any);
+    }
+    enqValor.addEventListener('input', ()=>{ updEnq(); updSem(); });
+    remValorFila.addEventListener('input', ()=>{ updRem(); updSem(); });
+    buscaValor.addEventListener('input', ()=>{ updBus(); updSem(); });
+    setDisabled(btnEnq,true); setDisabled(btnRemValor,true); setDisabled(btnBuscar,true);
+    setDisabled(btnDeq,true); setDisabled(btnInicio,true); setDisabled(btnFim,true);
+
+    btnEnq.addEventListener('click', ()=>{
+      const v=parseInt(enqValor.value,10);
       if(isNaN(v)) return alert('Valor?');
       const res=stepsFilaEnqueue(appState.lista, v, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnDeq').addEventListener('click', ()=>{
+    btnRemValor.addEventListener('click', ()=>{
+      const v=parseInt(remValorFila.value,10);
+      if(isNaN(v)) return alert('Valor?');
+      const idx = appState.lista.indexOf(v);
+      if(idx===-1){
+        const res=stepsBusca(appState.lista, v);
+        startSteps(res.steps, appState.lista, true);
+        return;
+      }
+      const res=stepsListaRemoverMeio(appState.lista, idx, meta);
+      appState.lista=res.newState; startSteps(res.steps, appState.lista);
+    });
+    btnDeq.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Fila vazia');
       const res=stepsFilaDequeue(appState.lista, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
     });
-    g1.querySelector('#btnInicio').addEventListener('click', ()=>{
+    btnInicio.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Fila vazia');
       const steps=[{titulo:'Consultar início',codigo:`int v = inicio->${meta.no.valor||'valor'};`,explicacao:`Início da fila: ${appState.lista[0]}`,ponteirosAlterados:meta.ponteiros.inicio||'inicio',snapshot:[...appState.lista],highlightIndex:0}];
       startSteps(steps, appState.lista, true);
     });
-    g1.querySelector('#btnFim').addEventListener('click', ()=>{
+    btnFim.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Fila vazia');
       const steps=[{titulo:'Consultar fim',codigo:`int v = fim->${meta.no.valor||'valor'};`,explicacao:`Fim da fila: ${appState.lista[appState.lista.length-1]}`,ponteirosAlterados:meta.ponteiros.fim||'fim',snapshot:[...appState.lista],highlightIndex:appState.lista.length-1}];
       startSteps(steps, appState.lista, true);
     });
-    g1.querySelector('#btnBuscar').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#buscaValor').value,10);
+    btnBuscar.addEventListener('click', ()=>{
+      const v=parseInt(buscaValor.value,10);
       if(isNaN(v)) return alert('Valor?');
       const res=stepsBusca(appState.lista,v);
       startSteps(res.steps, appState.lista, true);
@@ -322,50 +433,52 @@ function buildOperations(){
       <div class="op-row" style="margin-top:8px"><input id="treeBusca" type="number" placeholder="buscar"><button class="btn btn-ghost" id="btnTreeBusca">Buscar</button></div>
       <div class="op-row" style="margin-top:8px"><button class="btn btn-ghost" id="btnPre">Pré-ordem</button><button class="btn btn-ghost" id="btnIn">Em ordem</button><button class="btn btn-ghost" id="btnPos">Pós-ordem</button></div>
     `);
-    g1.querySelector('#btnTreeIns').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#treeValor').value,10);
+    const treeValor=g1.querySelector('#treeValor');
+    const btnTreeIns=g1.querySelector('#btnTreeIns');
+    const btnTreeRem=g1.querySelector('#btnTreeRem');
+    const treeBusca=g1.querySelector('#treeBusca');
+    const btnTreeBusca=g1.querySelector('#btnTreeBusca');
+    const btnPre=g1.querySelector('#btnPre');
+    const btnIn=g1.querySelector('#btnIn');
+    const btnPos=g1.querySelector('#btnPos');
+    function updTree(){ const has=treeValor.value.trim()!=='' && !isNaN(parseInt(treeValor.value,10)); setDisabled(btnTreeIns, !has); setDisabled(btnTreeRem, !has); }
+    function updBus(){ setDisabled(btnTreeBusca, treeBusca.value.trim()==='' || isNaN(parseInt(treeBusca.value,10))); }
+    function updSem(){ const any=treeValor.value.trim()!=='' || treeBusca.value.trim()!==''; setDisabled(btnPre, !any); setDisabled(btnIn, !any); setDisabled(btnPos, !any); }
+    treeValor.addEventListener('input', ()=>{ updTree(); updSem(); });
+    treeBusca.addEventListener('input', ()=>{ updBus(); updSem(); });
+    setDisabled(btnTreeIns,true); setDisabled(btnTreeRem,true); setDisabled(btnTreeBusca,true);
+    setDisabled(btnPre,true); setDisabled(btnIn,true); setDisabled(btnPos,true);
+    btnTreeIns.addEventListener('click', ()=>{
+      const v=parseInt(treeValor.value,10);
       if(isNaN(v)) return alert('Valor?');
-      // clone before to avoid mutation issues in steps
       let rootClone = appState.arvore ? cloneTree(appState.arvore) : null;
       const res=stepsTreeInsert(rootClone, v, isBST, meta);
       appState.arvore = res.newState;
       startSteps(res.steps, appState.arvore);
     });
-    g1.querySelector('#btnTreeRem').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#treeValor').value,10);
+    btnTreeRem.addEventListener('click', ()=>{
+      const v=parseInt(treeValor.value,10);
       if(isNaN(v)) return alert('Informe valor a remover');
-      const res=stepsTreeRemove(appState.arvore ? cloneTree(appState.arvore) : null, v, meta);
-      // for tree remove, we need to set new root accordingly
-      // stepsTreeRemove already clones; use returned newState
-      // But if not found, keep same
-      // We need to handle: res.newState is the new tree after removal (or cloned)
-      // So assign directly from a fresh remove on actual state
-      if(res.newState !== appState.arvore){
-        // res was on clone, but we need to apply to real
-        // Do actual removal on live tree
-        const liveClone = appState.arvore ? cloneTree(appState.arvore) : null;
-        const liveRes = stepsTreeRemove(liveClone, v, meta);
-        appState.arvore = liveRes.newState;
-        startSteps(liveRes.steps, appState.arvore);
-      } else {
-        startSteps(res.steps, appState.arvore, true);
-      }
+      const liveClone = appState.arvore ? cloneTree(appState.arvore) : null;
+      const liveRes = stepsTreeRemove(liveClone, v, meta);
+      appState.arvore = liveRes.newState;
+      startSteps(liveRes.steps, appState.arvore);
     });
-    g1.querySelector('#btnTreeBusca').addEventListener('click', ()=>{
-      const v=parseInt(g1.querySelector('#treeBusca').value,10);
+    btnTreeBusca.addEventListener('click', ()=>{
+      const v=parseInt(treeBusca.value,10);
       if(isNaN(v)) return alert('Valor?');
       const res=stepsTreeSearch(appState.arvore ? cloneTree(appState.arvore) : null, v, isBST, meta);
       startSteps(res.steps, appState.arvore, true);
     });
-    g1.querySelector('#btnPre').addEventListener('click', ()=>{
+    btnPre.addEventListener('click', ()=>{
       const res=stepsTraversal(appState.arvore ? cloneTree(appState.arvore) : null, 'pre');
       startSteps(res.steps, appState.arvore, true);
     });
-    g1.querySelector('#btnIn').addEventListener('click', ()=>{
+    btnIn.addEventListener('click', ()=>{
       const res=stepsTraversal(appState.arvore ? cloneTree(appState.arvore) : null, 'in');
       startSteps(res.steps, appState.arvore, true);
     });
-    g1.querySelector('#btnPos').addEventListener('click', ()=>{
+    btnPos.addEventListener('click', ()=>{
       const res=stepsTraversal(appState.arvore ? cloneTree(appState.arvore) : null, 'pos');
       startSteps(res.steps, appState.arvore, true);
     });
@@ -375,16 +488,12 @@ function buildOperations(){
 let lastSnapshotForMemory=null;
 
 function startSteps(steps, finalSnapshot, keepFinal=false){
-  // finalSnapshot is the state after operation; steps already contain intermediate snapshots
-  // For memory we want to reflect current appState after steps complete
   history.setSteps(steps);
   if(steps.length){
     renderStep(0);
     updateControls();
   }
-  // store final for memory after steps
   lastSnapshotForMemory = finalSnapshot;
-  // also immediately ensure memory shows final after steps? We'll update on each step
 }
 
 function renderCurrent(stepOverride){
@@ -395,26 +504,20 @@ function renderCurrent(stepOverride){
   } else {
     snapshot = currentTipo && currentTipo.includes('arvore') ? appState.arvore : appState.lista;
   }
-  // render visualization
   if(['lista_simples'].includes(currentTipo)) renderLista(visualization, snapshot, currentMeta, step);
   else if(currentTipo==='lista_dupla') renderDupla(visualization, snapshot, currentMeta, step);
   else if(currentTipo==='pilha') renderPilha(visualization, snapshot, currentMeta, step);
   else if(currentTipo==='fila') renderFila(visualization, snapshot, currentMeta, step);
   else if(currentTipo==='arvore_binaria' || currentTipo==='bst') renderTree(visualization, snapshot, currentMeta, step);
 
-  // memory
   renderMemory(memoryView, snapshot, currentMeta);
 
-  // step info
   if(step){
     stepInfo.classList.remove('hidden');
     stepTitle.textContent = step.titulo||'';
     stepCode.textContent = step.codigo||'';
     stepExplanation.textContent = step.explicacao||'';
     stepPointers.textContent = step.ponteirosAlterados ? `Ponteiros: ${step.ponteirosAlterados}` : '';
-    if(typeof window.hljs !== 'undefined' && stepCode.textContent){
-      // no highlight for step (plain), but keep style
-    }
   } else {
     stepInfo.classList.add('hidden');
   }
@@ -423,16 +526,35 @@ function renderCurrent(stepOverride){
 function renderStep(idx){
   const step = history.steps[idx];
   if(!step) return;
-  // update history index manually if needed
   history.index = idx;
   renderCurrent(step);
   updateControls();
 }
 function updateControls(){
-  stepCounter.textContent = history.steps.length ? `Passo ${history.index+1} / ${history.steps.length}` : '';
-  btnPrev.disabled = history.index<=0;
-  btnNext.disabled = history.index>=history.steps.length-1;
+  const hasSteps = history.steps.length>0;
+  const atEnd = hasSteps && history.index === history.steps.length-1;
+  stepCounter.textContent = hasSteps ? `Passo ${history.index+1} / ${history.steps.length}` : '';
+  btnPrev.disabled = !hasSteps || history.index<=0;
+  btnNext.disabled = !hasSteps || history.index>=history.steps.length-1;
+  btnPlay.disabled = !hasSteps;
   btnPlay.textContent = history.isPlaying ? '⏸ Pausar' : '▶ Executar';
+  if(atEnd){
+    btnReset.textContent = '■ Parar visualização';
+    btnReset.disabled = false;
+    btnReset.classList.remove('blurred');
+  } else if(!hasSteps){
+    btnReset.textContent = 'Reiniciar';
+    btnReset.disabled = true;
+    btnReset.classList.add('blurred');
+  } else {
+    btnReset.textContent = 'Reiniciar';
+    btnReset.disabled = false;
+    btnReset.classList.remove('blurred');
+  }
+  btnPrev.classList.toggle('blurred', btnPrev.disabled);
+  btnNext.classList.toggle('blurred', btnNext.disabled);
+  btnPlay.classList.toggle('blurred', btnPlay.disabled);
+  btnReset.classList.toggle('blurred', btnReset.disabled);
 }
 
 btnPrev.addEventListener('click', ()=>{
@@ -446,6 +568,18 @@ btnNext.addEventListener('click', ()=>{
   updateControls();
 });
 btnReset.addEventListener('click', ()=>{
+  const atEnd = history.steps.length>0 && history.index === history.steps.length-1;
+  if(atEnd){
+    history.stop();
+    history.setSteps([]);
+    history.index = -1;
+    stepInfo.classList.add('hidden');
+    stepCounter.textContent='';
+    resetOpsBlur();
+    updateControls();
+    renderCurrent(null);
+    return;
+  }
   history.reset();
   renderCurrent(history.current());
   updateControls();
@@ -468,3 +602,4 @@ btnPlay.addEventListener('click', ()=>{
 textarea.value = examples.lista_simples;
 textarea.dispatchEvent(new Event('input'));
 updateHighlight();
+updateControls();

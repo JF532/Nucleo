@@ -95,6 +95,9 @@
   padding:7px 10px;border-radius:var(--radius-sm);font-size:13px;min-width:90px;
 }
 .op-row input:focus{outline:1px solid var(--accent)}
+.btn:disabled{opacity:.38;filter:blur(.6px);pointer-events:none}
+.btn.blurred{opacity:.38;filter:blur(.7px);pointer-events:none}
+.op-group .btn.blurred{transform:scale(.98)}
 
 .analyzed-code{
   margin:0;padding:14px 16px;background:#0b1220;color:#cbd5e1;
