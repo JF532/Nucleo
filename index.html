@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataStruct Visualizer — Visualizador Interativo de Estruturas de Dados em C</title>
+<meta name="description" content="Cole código C e visualize estruturas de dados de forma interativa.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-theme">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/editor.css">
+<link rel="stylesheet" href="css/visualizations.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-icon">◈</span>
+      <div>
+        <h1>DataStruct Visualizer</h1>
+        <p class="subtitle">CÓDIGO C → ESTRUTURA → PONTEIROS → OPERAÇÃO → VISUALIZAÇÃO</p>
+      </div>
+    </div>
+    <nav class="topbar-actions">
+      <a href="https://github.com" target="_blank" rel="noopener" class="link-github">GitHub Pages Ready</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <section class="panel editor-panel">
+    <div class="panel-header">
+      <h2>Editor de Código C</h2>
+      <div class="panel-actions">
+        <select id="exampleSelect" class="select">
+          <option value="">Carregar exemplo…</option>
+          <option value="lista_simples">Lista simplesmente encadeada</option>
+          <option value="lista_dupla">Lista duplamente encadeada</option>
+          <option value="pilha">Pilha</option>
+          <option value="fila">Fila</option>
+          <option value="arvore">Árvore binária</option>
+          <option value="bst">Árvore binária de busca (BST)</option>
+        </select>
+        <button id="btnClear" class="btn btn-ghost">Limpar</button>
+        <button id="btnAnalyze" class="btn btn-primary">▶ Analisar código</button>
+      </div>
+    </div>
+
+    <div class="editor-wrapper" id="editorWrapper">
+      <div class="gutter" id="gutter">1</div>
+      <div class="editor-area">
+        <pre class="highlight-layer" aria-hidden="true"><code id="highlightCode" class="language-c"></code></pre>
+        <textarea id="codeInput" spellcheck="false" placeholder="Cole seu código C aqui...
+
+Exemplo:
+typedef struct No {
+    int valor;
+    struct No *prox;
+} No;
+
+No *inicio = NULL;"></textarea>
+      </div>
+    </div>
+    <p class="editor-hint">Dica: cole o código completo com <code>struct</code>, ponteiros e funções. O sistema identifica automaticamente a estrutura.</p>
+  </section>
+
+  <section id="detectionBanner" class="detection-banner hidden">
+    <div class="detection-icon">✓</div>
+    <div class="detection-text">
+      <strong id="detectionTitle">Estrutura detectada</strong>
+      <p id="detectionDesc"></p>
+      <p id="detectionAmbiguous" class="ambiguous hidden"></p>
+    </div>
+  </section>
+
+  <section id="workspace" class="workspace hidden">
+    <div class="workspace-grid">
+      <div class="viz-column">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Visualização</h3>
+            <div class="viz-legend">
+              <span class="legend-dot valor"></span> valor
+              <span class="legend-dot ponteiro"></span> ponteiro
+              <span class="legend-dot null"></span> NULL
+            </div>
+          </div>
+          <div id="visualization" class="visualization"></div>
+
+          <div class="step-controls">
+            <button id="btnPrev" class="btn btn-ghost">← Anterior</button>
+            <button id="btnPlay" class="btn btn-ghost">▶ Executar</button>
+            <button id="btnNext" class="btn btn-primary">Próximo →</button>
+            <button id="btnReset" class="btn btn-ghost">Reiniciar</button>
+            <span id="stepCounter" class="step-counter"></span>
+          </div>
+
+          <div id="stepInfo" class="step-info hidden">
+            <h4 id="stepTitle"></h4>
+            <pre id="stepCode" class="step-code"></pre>
+            <p id="stepExplanation"></p>
+            <p id="stepPointers" class="step-pointers"></p>
+          </div>
+        </div>
+
+        <div class="panel" id="memoryPanel">
+          <div class="panel-header collapsible" id="memoryToggle">
+            <h3>Memória simulada <span class="collapse-icon">▾</span></h3>
+            <span class="hint">endereços fictícios</span>
+          </div>
+          <div id="memoryView" class="memory-view"></div>
+        </div>
+      </div>
+
+      <div class="ops-column">
+        <div class="panel">
+          <div class="panel-header"><h3>Operações</h3></div>
+          <div id="operations" class="operations"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Código analisado</h3></div>
+          <pre id="analyzedCode" class="analyzed-code"><code class="language-c"></code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>Projeto educacional estático — sem backend, sem banco, compatível com GitHub Pages. Não executa C real; simula via analisador JS.</p>
+  </footer>
+</main>
+
+<!-- Highlight.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+<script>
+  // Fallback marker: if CDN fails, window.hljs will be undefined and editor.js will use regex fallback
+  if (typeof hljs !== 'undefined') {
+    hljs.configure({ignoreUnescapedHTML: true});
+  }
+</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

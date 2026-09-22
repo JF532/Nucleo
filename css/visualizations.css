@@ -1,0 +1,57 @@
+/* Generic node styles */
+.nodes-row{
+  display:flex;align-items:center;gap:0;flex-wrap:wrap;padding:8px 0;
+}
+.node{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  position:relative;min-width:92px;
+}
+.node-box{
+  border:1px solid var(--accent);background:rgba(56,189,248,.08);
+  border-radius:10px;padding:8px 12px;min-width:84px;text-align:center;
+  position:relative;
+}
+.node-box.double{border-color:#a78bfa;background:rgba(167,139,250,.08)}
+.node-box.stack{border-color:#34d399}
+.node-box.tree{border-color:#fbbf24;background:rgba(251,191,36,.08);border-radius:50%;width:56px;height:56px;display:grid;place-items:center;padding:0}
+.node-box.tree.active{box-shadow:0 0 0 3px rgba(251,191,36,.5),0 0 18px rgba(251,191,36,.4);transform:scale(1.08)}
+.node-box.active{box-shadow:0 0 0 2px var(--accent),0 0 12px rgba(56,189,248,.4)}
+.node-label{font-size:11px;color:var(--text-muted)}
+.node-value{font-weight:700;font-size:15px;color:var(--text)}
+.node-field{font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;gap:8px;width:100%}
+.node-field b{color:var(--warning)}
+.arrow{
+  width:36px;height:2px;background:var(--text-muted);position:relative;flex-shrink:0;
+}
+.arrow::after{
+  content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+  border:6px solid transparent;border-left-color:var(--text-muted);
+}
+.arrow.double::before{
+  content:"";position:absolute;left:-6px;top:50%;transform:translateY(-50%);
+  border:6px solid transparent;border-right-color:var(--text-muted);
+}
+.arrow.active{background:var(--accent)}
+.arrow.active::after{border-left-color:var(--accent)}
+.pointer-label{
+  font-size:11px;color:var(--accent);font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.pointer-arrow{color:var(--accent);font-size:14px}
+.null-box{
+  border:1px dashed var(--border);color:var(--text-muted);
+  padding:6px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.03)
+}
+
+/* Stack vertical */
+.stack-col{display:flex;flex-direction:column;align-items:center;gap:0}
+.stack-col .arrow{width:2px;height:28px}
+.stack-col .arrow::after{right:50%;top:auto;bottom:-6px;transform:translateX(50%);border-left-color:transparent;border-top-color:var(--text-muted)}
+.stack-node{margin:4px 0}
+
+/* Tree SVG */
+.tree-svg-wrap{width:100%;overflow:auto;display:flex;justify-content:center}
+.tree-svg{overflow:visible}
+.tree-edge{stroke:var(--text-muted);stroke-width:1.6}
+.tree-edge.active{stroke:var(--accent);stroke-width:2.4}
+.traversal-result{margin-top:10px;font-size:13px;color:var(--text-muted)}
+.traversal-result b{color:var(--accent)}
