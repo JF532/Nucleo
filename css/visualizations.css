@@ -42,6 +42,16 @@
   padding:6px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.03)
 }
 
+/* Bifurcação SVG Passo 3 */
+.visualization-inner{position:relative}
+.fork-svg{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.fork-path{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.fork-path.inicio{stroke:var(--accent)}
+.fork-path.novo{stroke:var(--warning);stroke-dasharray:7 5}
+.fork-label{font-size:10px;fill:var(--text-muted);font-family:var(--mono)}
+.node-box.temp{border:1px dashed var(--warning);background:rgba(245,158,11,.10)}
+.node-box.temp.active{box-shadow:0 0 0 2px var(--warning),0 0 12px rgba(245,158,11,.35)}
+
 /* Stack vertical */
 .stack-col{display:flex;flex-direction:column;align-items:center;gap:0}
 .stack-col .arrow{width:2px;height:28px}
