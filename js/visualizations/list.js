@@ -22,12 +22,14 @@ export function renderLista(container, snapshot, meta, step){
     node.className='node';
     const isActive = step && step.highlightIndex===idx;
     const isTemp = false;
+    const nextVal = idx < snapshot.length-1 ? snapshot[idx+1] : 'NULL';
     const box = document.createElement('div');
     box.className='node-box'+(isActive?' active':'');
+    box.style.minWidth='110px';
     box.innerHTML = `
       <div class="node-label">${meta.no.valor||'valor'}</div>
       <div class="node-value">${valor}</div>
-      <div class="node-field"><span>${meta.no.proximo||'prox'}</span><b>${idx < snapshot.length-1 ? '→' : 'NULL'}</b></div>
+      <div class="node-field"><span>${meta.no.proximo||'prox'}</span><b>→ ${nextVal}</b></div>
     `;
     node.appendChild(box);
 

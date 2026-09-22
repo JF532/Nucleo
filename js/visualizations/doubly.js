@@ -27,15 +27,18 @@ export function renderDupla(container, snapshot, meta, step){
     const node = document.createElement('div');
     node.className='node';
     const isActive = step && step.highlightIndex===idx;
+    const prevVal = idx>0 ? snapshot[idx-1] : 'NULL';
+    const nextVal = idx < snapshot.length-1 ? snapshot[idx+1] : 'NULL';
     const box = document.createElement('div');
     box.className='node-box double'+(isActive?' active':'');
+    box.style.minWidth='120px';
     box.innerHTML = `
       <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;width:100%">
         <span class="node-field" style="width:auto"><b>${idx===0?'NULL':'←'}</b></span>
         <span class="node-value" style="font-size:14px">${valor}</span>
         <span class="node-field" style="width:auto"><b>${idx===snapshot.length-1?'NULL':'→'}</b></span>
       </div>
-      <div class="node-field" style="font-size:10px;justify-content:space-between"><span>${meta.no.anterior||'ant'}</span><span>${meta.no.valor||'valor'}</span><span>${meta.no.proximo||'prox'}</span></div>
+      <div class="node-field" style="font-size:10px;gap:8px;justify-content:space-between"><span>${meta.no.anterior||'ant'} → ${prevVal}</span><span>${meta.no.proximo||'prox'} → ${nextVal}</span></div>
     `;
     node.appendChild(box);
     wrap.appendChild(node);

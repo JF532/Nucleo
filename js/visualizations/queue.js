@@ -19,13 +19,15 @@ export function renderFila(container, snapshot, meta, step){
     const node = document.createElement('div');
     node.className='node';
     const isActive = step && step.highlightIndex===idx;
+    const nextVal = idx<snapshot.length-1 ? snapshot[idx+1] : 'NULL';
     const box = document.createElement('div');
     box.className='node-box'+(isActive?' active':'');
+    box.style.minWidth='110px';
     // highlight fim on last
     if(idx===snapshot.length-1) box.style.borderColor='#a78bfa';
     box.innerHTML = `
       <div class="node-value">${valor}</div>
-      <div class="node-field"><span>${meta.no.proximo||'prox'}</span><b>${idx<snapshot.length-1?'→':'NULL'}</b></div>
+      <div class="node-field"><span>${meta.no.proximo||'prox'}</span><b>→ ${nextVal}</b></div>
     `;
     node.appendChild(box);
     // fim label below last

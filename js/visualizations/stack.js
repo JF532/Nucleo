@@ -17,10 +17,11 @@ export function renderPilha(container, snapshot, meta, step){
     const node = document.createElement('div');
     node.className='node stack-node';
     const isActive = step && step.highlightIndex===idx;
+    const nextVal = idx < snapshot.length-1 ? snapshot[idx+1] : 'NULL';
     const box = document.createElement('div');
     box.className='node-box stack'+(isActive?' active':'');
     box.style.minWidth='110px';
-    box.innerHTML = `<div class="node-value">${valor}</div><div class="node-label">${idx===0?'topo':''}</div>`;
+    box.innerHTML = `<div class="node-value">${valor}</div><div class="node-label">${idx===0?'topo':''}</div><div class="node-field" style="font-size:11px;justify-content:center"><span>${meta.no.proximo||'prox'}</span><b style="margin-left:6px">→ ${nextVal}</b></div>`;
     node.appendChild(box);
     wrap.appendChild(node);
     if(idx < snapshot.length-1){
