@@ -833,8 +833,10 @@ textarea.dispatchEvent(new Event('input'));
 updateHighlight();
 updateControls();
 
-// habilitar RBT apenas em localhost para testes (produção mantém desabilitado)
+// habilitar BST e RBT apenas em localhost para testes (produção mantém desabilitado)
 if(location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === ''){
-  const rbtOpt = document.querySelector('option[value="rbt"]');
-  if(rbtOpt){ rbtOpt.disabled=false; rbtOpt.textContent='Árvore Rubro-Negra'; }
+  ['bst','rbt'].forEach(v=>{
+    const opt=document.querySelector(`option[value="${v}"]`);
+    if(opt){ opt.disabled=false; opt.textContent=opt.textContent.replace(' (em validação)',''); }
+  });
 }
