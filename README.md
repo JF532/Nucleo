@@ -2,13 +2,7 @@
 
 **Visualizador Interativo de Estruturas de Dados em C — focado nas cadeiras de AED (Algoritmos e Estruturas de Dados) da faculdade.**
 
-Projeto educacional, **estático e sem backend**, para relacionar de forma didática:
-
-**CÓDIGO C → ESTRUTURA → PONTEIROS → OPERAÇÃO → VISUALIZAÇÃO**
-
 Cole um código em `C` com `struct` e ponteiros, clique em **Analisar código** e o sistema identifica automaticamente a estrutura, monta a visualização e libera operações passo a passo — sem precisar escolher manualmente “Pilha”, “Fila”, etc.
-
-> Desenvolvido por **João Filipe** — projeto da disciplina de AED. O Professor Ricardo aparece como avatar-guia (`Avatares/professor_ricardo.gif`) nas explicações.
 
 ---
 
@@ -76,7 +70,7 @@ Projeto 100% estático — compatível com **GitHub Pages**. Para testar localme
 
 ```bash
 # na pasta do projeto (use o atalho sem acento para evitar encoding)
-cd "C:\Users\JoaoFilipe\Desktop\Faculdade\PROJETOS\Projeto_AED"
+cd "C:\Users\JF\Desktop\Faculdade\PROJETOS\Projeto_AED"
 python -m http.server 8000
 # abra http://localhost:8000
 ```
@@ -163,15 +157,9 @@ Reutiliza `History`, `steps`, `render*`, `memory`, `detector` existentes — nad
 
 ---
 
-## 🚀 Deploy no GitHub Pages
-
-Repositório: `JF532/Projeto_AED_Faculdade` (branch `main`). Como é privado, o Pages exige repo **público** no plano Free — torne público em `Settings → Danger Zone → Change visibility` e ative `Settings → Pages → Source: main / root`. O `.nojekyll` já garante que `Avatares/` e `css/js` sejam servidos.
-
----
-
 ## 📚 Foco
 
-Projeto feito **focando nas cadeiras de AED** — para estudar e demonstrar estruturas encadeadas e arbóreas em C de forma visual, interativa e didática, com o Professor Ricardo como guia.
+Projeto feito **focando nas cadeiras de AED** — para estudar e demonstrar estruturas encadeadas e arbóreas em C de forma visual, interativa e didática.
 
 ---
 
