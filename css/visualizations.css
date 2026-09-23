@@ -1,7 +1,12 @@
 /* Generic node styles - bem arejado */
 .nodes-row{
   display:flex;align-items:center;gap:22px;flex-wrap:nowrap;min-width:max-content;padding:18px 36px 18px 12px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--accent) rgba(255,255,255,.06);
 }
+.nodes-row::-webkit-scrollbar{height:8px}
+.nodes-row::-webkit-scrollbar-track{background:rgba(255,255,255,.06);border-radius:999px}
+.nodes-row::-webkit-scrollbar-thumb{background:var(--accent);border-radius:999px}
 .node{
   display:flex;flex-direction:column;align-items:center;gap:8px;
   position:relative;min-width:92px;

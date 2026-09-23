@@ -68,7 +68,14 @@
   padding:28px 24px 22px;min-height:460px;max-height:740px;overflow-x:auto;overflow-y:visible;
   background:radial-gradient(ellipse at top, #1e293b 0%, #0f172a 70%);
   resize:vertical;
+  scrollbar-width:thin;
+  scrollbar-color:var(--accent) rgba(255,255,255,.06);
+  scrollbar-gutter:stable;
 }
+.visualization::-webkit-scrollbar{height:8px;width:8px}
+.visualization::-webkit-scrollbar-track{background:rgba(255,255,255,.06);border-radius:999px}
+.visualization::-webkit-scrollbar-thumb{background:var(--accent);border-radius:999px;border:1px solid rgba(0,0,0,.15)}
+.visualization::-webkit-scrollbar-thumb:hover{background:var(--accent-strong)}
 .visualization.expanded{min-height:70vh;max-height:none}
 @media(max-width:980px){
   .visualization{min-height:420px}
