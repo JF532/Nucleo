@@ -86,17 +86,18 @@ function extractInitialValues(code, tipo){
   return vals;
 }
 
-// avatares dinamicos
+// avatares dinamicos - Professor Ricardo (gif) como principal
 const avatarMap = {
   acenando: 'Avatares/acenando.png',
   pensando: 'Avatares/pensando.png',
   computador: 'Avatares/usando_computador.png',
   joinha: 'Avatares/joinha.png',
   comemorando: 'Avatares/comemorando.png',
-  raiva: 'Avatares/raiva.png'
+  raiva: 'Avatares/raiva.png',
+  professor: 'Avatares/professor_ricardo.gif'
 };
 function getAvatarForStep(step){
-  if(!step) return avatarMap.acenando;
+  if(!step) return avatarMap.professor;
   const t = ((step.titulo||'') + ' ' + (step.explicacao||'')).toLowerCase();
   const code = (step.codigo||'').toLowerCase();
   if(step.notFound || t.includes('não encontrado') || t.includes('nao encontrado') || t.includes('não existe') || t.includes('vazia') || t.includes('nada a remover')) return avatarMap.raiva;
@@ -107,8 +108,8 @@ function getAvatarForStep(step){
   if(step.tempNode !== undefined || t.includes('malloc') || t.includes('criar novo') || t.includes('alocar') || code.includes('malloc')) return avatarMap.computador;
   if(step.highlightIndex !== undefined || step.activeValue !== undefined || t.includes('percorrer') || t.includes('comparar') || t.includes('localizar') || t.includes('buscar')) return avatarMap.pensando;
   if(t.includes('atualizar') || t.includes('encadear') || t.includes('inserir') || t.includes('reorganizar') || t.includes('bypass')) return avatarMap.joinha;
-  if(history.index===0) return avatarMap.acenando;
-  return avatarMap.pensando;
+  if(history.index===0) return avatarMap.professor;
+  return avatarMap.professor;
 }
 
 // helpers for blur/disabled
@@ -630,12 +631,15 @@ function renderCurrent(stepOverride){
         else if(src.includes('comemorando')) avatarLabel.textContent = 'Consegui!';
         else if(src.includes('pensando')) avatarLabel.textContent = 'Hmm...';
         else if(src.includes('computador')) avatarLabel.textContent = 'Criando...';
+        else if(src.includes('professor')) avatarLabel.textContent = 'Professor Ricardo';
         else avatarLabel.textContent = 'VisualizaC';
       }
+      // se for gif do professor, garantir que o alt indique
+      if(src.includes('professor')) avatarImg.alt = 'Professor Ricardo';
     }
   } else {
     stepInfo.classList.add('hidden');
-    if(avatarImg) avatarImg.src = avatarMap.acenando;
+    if(avatarImg) avatarImg.src = avatarMap.professor;
   }
 }
 
