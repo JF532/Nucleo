@@ -524,6 +524,64 @@ function buildOperations(){
       startSteps(res.steps, appState.lista, true);
     });
 
+  } else if(tipo==='rubro_negra'){
+    const g1=addGroup('Árvore Rubro-Negra — Inserir / Remover / Buscar (em validação)', `
+      <div class="op-row"><input id="treeValor" type="number" placeholder="valor"><button class="btn btn-primary" id="btnTreeIns">Inserir</button><button class="btn btn-ghost" id="btnTreeRem">Remover</button></div>
+      <div class="op-row" style="margin-top:8px"><input id="treeBusca" type="number" placeholder="buscar"><button class="btn btn-ghost" id="btnTreeBusca">Buscar</button></div>
+      <div class="op-row" style="margin-top:8px"><button class="btn btn-ghost" id="btnPre">Pré-ordem</button><button class="btn btn-ghost" id="btnIn">Em ordem</button><button class="btn btn-ghost" id="btnPos">Pós-ordem</button></div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-muted);border-left:2px solid var(--warning);padding-left:8px">RBT em validação — nós com <b style="color:#ef4444">VERMELHO</b>/<b>PRETO</b> e NIL. Casos de correção (tio vermelho, rotação) em desenvolvimento — usando BST com cores por enquanto.</div>
+    `);
+    const treeValor=g1.querySelector('#treeValor');
+    const btnTreeIns=g1.querySelector('#btnTreeIns');
+    const btnTreeRem=g1.querySelector('#btnTreeRem');
+    const treeBusca=g1.querySelector('#treeBusca');
+    const btnTreeBusca=g1.querySelector('#btnTreeBusca');
+    const btnPre=g1.querySelector('#btnPre');
+    const btnIn=g1.querySelector('#btnIn');
+    const btnPos=g1.querySelector('#btnPos');
+    function updTree(){ const has=treeValor.value.trim()!=='' && !isNaN(parseInt(treeValor.value,10)); setDisabled(btnTreeIns, !has); setDisabled(btnTreeRem, !has); }
+    function updBus(){ setDisabled(btnTreeBusca, treeBusca.value.trim()==='' || isNaN(parseInt(treeBusca.value,10))); }
+    function updSem(){ const any=treeValor.value.trim()!=='' || treeBusca.value.trim()!==''; setDisabled(btnPre, !any); setDisabled(btnIn, !any); setDisabled(btnPos, !any); }
+    treeValor.addEventListener('input', ()=>{ updTree(); updSem(); });
+    treeBusca.addEventListener('input', ()=>{ updBus(); updSem(); });
+    setDisabled(btnTreeIns,true); setDisabled(btnTreeRem,true); setDisabled(btnTreeBusca,true);
+    setDisabled(btnPre,true); setDisabled(btnIn,true); setDisabled(btnPos,true);
+    btnTreeIns.addEventListener('click', ()=>{
+      const v=parseInt(treeValor.value,10);
+      if(isNaN(v)) return alert('Valor?');
+      let rootClone = appState.arvore ? cloneTree(appState.arvore) : null;
+      const res=stepsTreeInsert(rootClone, v, true, meta);
+      // marcar como RBT: raiz preta, novo vermelho (simulado por enquanto via BST)
+      if(res.newState) res.newState.cor='BLACK';
+      appState.arvore = res.newState;
+      startSteps(res.steps, appState.arvore);
+    });
+    btnTreeRem.addEventListener('click', ()=>{
+      const v=parseInt(treeValor.value,10);
+      if(isNaN(v)) return alert('Informe valor a remover');
+      const liveClone = appState.arvore ? cloneTree(appState.arvore) : null;
+      const liveRes = stepsTreeRemove(liveClone, v, meta);
+      appState.arvore = liveRes.newState;
+      startSteps(liveRes.steps, appState.arvore);
+    });
+    btnTreeBusca.addEventListener('click', ()=>{
+      const v=parseInt(treeBusca.value,10);
+      if(isNaN(v)) return alert('Valor?');
+      const res=stepsTreeSearch(appState.arvore ? cloneTree(appState.arvore) : null, v, true, meta);
+      startSteps(res.steps, appState.arvore, true);
+    });
+    btnPre.addEventListener('click', ()=>{
+      const res=stepsTraversal(appState.arvore ? cloneTree(appState.arvore) : null, 'pre');
+      startSteps(res.steps, appState.arvore, true);
+    });
+    btnIn.addEventListener('click', ()=>{
+      const res=stepsTraversal(appState.arvore ? cloneTree(appState.arvore) : null, 'in');
+      startSteps(res.steps, appState.arvore, true);
+    });
+    btnPos.addEventListener('click', ()=>{
+      const res=stepsTraversal(appState.arvore ? cloneTree(appState.arvore) : null, 'pos');
+      startSteps(res.steps, appState.arvore, true);
+    });
   } else if(tipo==='arvore_binaria' || tipo==='bst'){
     const g1=addGroup('Árvore — Inserir / Remover / Buscar', `
       <div class="op-row"><input id="treeValor" type="number" placeholder="valor"><button class="btn btn-primary" id="btnTreeIns">Inserir</button><button class="btn btn-ghost" id="btnTreeRem">Remover</button></div>
@@ -605,7 +663,7 @@ function renderCurrent(stepOverride){
   else if(currentTipo==='lista_dupla') renderDupla(visualization, snapshot, currentMeta, step);
   else if(currentTipo==='pilha') renderPilha(visualization, snapshot, currentMeta, step);
   else if(currentTipo==='fila') renderFila(visualization, snapshot, currentMeta, step);
-  else if(currentTipo==='arvore_binaria' || currentTipo==='bst') renderTree(visualization, snapshot, currentMeta, step);
+  else if(currentTipo==='arvore_binaria' || currentTipo==='bst' || currentTipo==='rubro_negra') renderTree(visualization, snapshot, currentMeta, step);
 
   renderMemory(memoryView, snapshot, currentMeta);
 
@@ -723,3 +781,9 @@ textarea.value = examples.lista_simples;
 textarea.dispatchEvent(new Event('input'));
 updateHighlight();
 updateControls();
+
+// habilitar RBT apenas em localhost para testes (produção mantém desabilitado)
+if(location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === ''){
+  const rbtOpt = document.querySelector('option[value="rbt"]');
+  if(rbtOpt){ rbtOpt.disabled=false; rbtOpt.textContent='Árvore Rubro-Negra'; }
+}
