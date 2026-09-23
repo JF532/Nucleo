@@ -8,7 +8,8 @@ const LABELS = {
   pilha: 'Pilha',
   fila: 'Fila',
   arvore_binaria: 'Árvore binária',
-  bst: 'Árvore binária de busca (BST)'
+  bst: 'Árvore binária de busca (BST)',
+  rubro_negra: 'Árvore Rubro-Negra'
 };
 
 const DESCS = {
@@ -17,7 +18,8 @@ const DESCS = {
   pilha: 'Detectamos uma pilha porque há um ponteiro topo/top e operações push/pop (ou empilhar/desempilhar).',
   fila: 'Detectamos uma fila porque há ponteiros inicio/front e fim/rear com operações enqueue/dequeue.',
   arvore_binaria: 'Detectamos uma árvore binária porque o nó possui dois ponteiros (esquerda/direita).',
-  bst: 'Detectamos uma árvore binária de busca (BST) porque há dois ponteiros laterais e regra de ordenação (valor < nó->valor).'
+  bst: 'Detectamos uma árvore binária de busca (BST) porque há dois ponteiros laterais e regra de ordenação (valor < nó->valor).',
+  rubro_negra: 'Detectamos uma árvore rubro-negra porque o nó possui cor (RED/BLACK), ponteiro pai e rotações/corrigir.'
 };
 
 export function analyze(code){
@@ -86,8 +88,27 @@ export function analyze(code){
       const hasAnt = nodeMeta && nodeMeta.fields.anterior;
       if(hasAnt) ambiguo = null; // dupla com ant é clara
       else ambiguo = [top[0], second[0]];
+    } else if(top2.includes('rubro_negra') && top2.includes('bst')){
+      const hasCor = nodeMeta?.fields.cor;
+      const hasPai = nodeMeta?.fields.pai;
+      const hasRB = /RED|BLACK|VERMELHO|PRETO/i.test(tokenized.normalized);
+      const hasRot = /rotacao|rotate/i.test(tokenized.lower);
+      if(!hasCor || (!hasRB && !hasRot)) ambiguo=null;
+      else if(top[0]!=='rubro_negra' || Math.abs(scores.rubro_negra - scores.bst)<10) ambiguo=['rubro_negra','bst'];
+    } else if(top2.includes('rubro_negra') && top2.includes('arvore_binaria')){
+      ambiguo = scores.rubro_negra > scores.arvore_binaria+15 ? null : [top[0],second[0]];
     } else {
       ambiguo = [top[0], second[0]];
+    }
+  }
+
+  // RBT threshold: só considera RBT se score >=60 e tiver cor + (RED/BLACK ou rotacao)
+  if(tipo==='rubro_negra' && scores.rubro_negra < 60){
+    const hasCor = nodeMeta?.fields.cor;
+    const hasRB = /RED|BLACK|VERMELHO|PRETO/i.test(tokenized.normalized);
+    const hasRot = /rotacao|rotate/i.test(tokenized.lower);
+    if(!hasCor || (!hasRB && !hasRot)){
+      tipo = scores.bst > scores.arvore_binaria ? 'bst' : 'arvore_binaria';
     }
   }
 
@@ -156,6 +177,13 @@ function buildMeta(tipo, nodeMeta, tokenized){
       tipo,
       no: { valor: f.valor||'valor', proximo: f.proximo||'prox' },
       ponteiros: { inicio: findGlobal(/inicio/i,'inicio') }
+    };
+  }
+  if(tipo==='rubro_negra'){
+    return {
+      tipo,
+      no: { valor: f.valor||'valor', esquerda: f.esquerda||'esquerda', direita: f.direita||'direita', cor: f.cor||'cor', pai: f.pai||'pai' },
+      ponteiros: { raiz: findGlobal(/raiz|root/i,'raiz') }
     };
   }
   if(tipo==='arvore_binaria' || tipo==='bst'){

@@ -19,11 +19,10 @@ export function tokenize(code){
       const ptrMatch = line.match(/(struct\s+(\w+)\s*\*|(\w+)\s*\*)\s*(\w+)/);
       const isSelfPtr = (() => {
         if(!ptrMatch) return false;
-        // heuristic: if line contains struct <Name> *  it's likely self ptr
-        // also typedef self: No *prox where No is typedef name
-        return /struct\s+\w+\s*\*/.test(line) || /\*\s*(prox|next|ant|prev|anterior|esquerda|direita|left|right|esq|dir)/i.test(line);
+        return /struct\s+\w+\s*\*/.test(line) || /\*\s*(prox|next|ant|prev|anterior|esquerda|direita|left|right|esq|dir|pai|parent)/i.test(line);
       })();
-      fields.push({ raw: line, isSelfPtr, isPointer: line.includes('*') });
+      const isColorField = /cor|color|colour/i.test(line) && !line.includes('*');
+      fields.push({ raw: line, isSelfPtr, isPointer: line.includes('*'), isColorField });
     }
     structs.push({ raw: m[0], name: m[2]||m[4]||'', body, fields });
   }
@@ -52,13 +51,16 @@ export function tokenize(code){
 
   // pointer assignments
   const pointerAssigns = [];
-  const assignRe = /(\w+)\s*->\s*(prox|next|ant|prev|anterior|esquerda|direita|left|right|esq|dir)\s*=/gi;
+  const assignRe = /(\w+)\s*->\s*(prox|next|ant|prev|anterior|esquerda|direita|left|right|esq|dir|pai|parent|cor|color)\s*=/gi;
   while((m = assignRe.exec(normalized))){
     pointerAssigns.push({ left: m[1], field: m[2].toLowerCase() });
   }
 
+  // Rubro-Negra: defines e termos
+  const hasRedBlack = /#define\s+(RED|BLACK)|\bRED\b.*\bBLACK\b|\bVERMELHO\b.*\bPRETO\b/i.test(normalized);
+
   // raw lower for keyword search
   const lower = normalized.toLowerCase();
 
-  return { original, normalized, lower, structs, globals, functions, funcNames, pointerAssigns };
+  return { original, normalized, lower, structs, globals, functions, funcNames, pointerAssigns, hasRedBlack };
 }

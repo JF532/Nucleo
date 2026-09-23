@@ -122,6 +122,82 @@ No* inserir(No *no, int v){
     else
         no->direita = inserir(no->direita, v);
     return no;
+}`,
+  rbt: `// Árvore Rubro-Negra - exemplo em validação (botão desabilitado)
+#define RED 1
+#define BLACK 0
+
+typedef struct No {
+    int valor;
+    int cor; // RED / BLACK
+    struct No *esquerda;
+    struct No *direita;
+    struct No *pai;
+} No;
+
+No *raiz = NULL;
+
+void rotacao_esquerda(No *x){
+    No *y = x->direita;
+    x->direita = y->esquerda;
+    if(y->esquerda) y->esquerda->pai = x;
+    y->pai = x->pai;
+    if(x->pai == NULL) raiz = y;
+    else if(x == x->pai->esquerda) x->pai->esquerda = y;
+    else x->pai->direita = y;
+    y->esquerda = x;
+    x->pai = y;
+}
+
+void rotacao_direita(No *y){
+    No *x = y->esquerda;
+    y->esquerda = x->direita;
+    if(x->direita) x->direita->pai = y;
+    x->pai = y->pai;
+    if(y->pai == NULL) raiz = x;
+    else if(y == y->pai->esquerda) y->pai->esquerda = x;
+    else y->pai->direita = x;
+    x->direita = y;
+    y->pai = x;
+}
+
+void corrigirInsercao(No *z){
+    while(z->pai && z->pai->cor == RED){
+        No *avo = z->pai->pai;
+        No *tio = (z->pai == avo->esquerda) ? avo->direita : avo->esquerda;
+        if(tio && tio->cor == RED){
+            // Caso 1 - tio vermelho: recolorir
+            z->pai->cor = BLACK;
+            tio->cor = BLACK;
+            avo->cor = RED;
+            z = avo;
+        } else {
+            // Caso 2 e 3 - tio preto, rotacoes
+            if(z == z->pai->direita && z->pai == avo->esquerda){
+                z = z->pai;
+                rotacao_esquerda(z);
+            } else if(z == z->pai->esquerda && z->pai == avo->direita){
+                z = z->pai;
+                rotacao_direita(z);
+            }
+            z->pai->cor = BLACK;
+            avo->cor = RED;
+            if(z == z->pai->esquerda) rotacao_direita(avo);
+            else rotacao_esquerda(avo);
+            break;
+        }
+    }
+    raiz->cor = BLACK;
+}
+
+No* inserir(No *no, int v){
+    No *z = malloc(sizeof(No));
+    z->valor = v;
+    z->cor = RED;
+    z->esquerda = z->direita = z->pai = NULL;
+    // inserir como BST e depois corrigir
+    // ... (logica BST + corrigirInsercao(z))
+    return z;
 }`
 };
 
