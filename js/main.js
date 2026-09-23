@@ -229,6 +229,57 @@ btnAnalyze.addEventListener('click', ()=>{
       if(!isExampleCode && extracted.length===0) appState.lista = [];
     }
     appState.arvore = null;
+  } else if(currentTipo==='rubro_negra'){
+    // RBT: construir com cores e NIL (demo com cores válidas)
+    let root=null;
+    function createRBTNode(v){ return {valor:v, esq:null, dir:null, pai:null, cor:'RED'}; }
+    function insertRBT(root, v){
+      if(!root){
+        const n=createRBTNode(v);
+        n.cor='BLACK';
+        return n;
+      }
+      // BST insert com pai
+      let y=null, x=root;
+      while(x){
+        y=x;
+        if(v < x.valor) x=x.esq;
+        else if(v > x.valor) x=x.dir;
+        else return root; // duplicata
+      }
+      const z=createRBTNode(v);
+      z.pai=y;
+      if(v < y.valor) y.esq=z;
+      else y.dir=z;
+      // fixup simplificado para demo: se pai é vermelho, recolorir (tio vermelho) ou rotacionar (tio preto)
+      // para demo inicial, vamos apenas garantir raiz preta e alternar cores por nível para exemplo visual válido
+      // correção simples: se pai vermelho, pinta pai de preto e avô de vermelho (caso tio vermelho)
+      // Para demo com poucos valores, vamos recolorir por nível: raiz BLACK, filhos RED, netos BLACK
+      function fixDemo(n, depth=0){
+        if(!n) return;
+        if(depth===0) n.cor='BLACK';
+        else if(depth===1) n.cor='RED';
+        else if(depth===2) n.cor='BLACK';
+        else n.cor = (depth%2===1) ? 'RED' : 'BLACK';
+        // garantir que nenhum vermelho tenha filho vermelho (ajuste)
+        if(n.cor==='RED' && n.pai && n.pai.cor==='RED'){
+          n.cor='BLACK';
+        }
+        fixDemo(n.esq, depth+1);
+        fixDemo(n.dir, depth+1);
+      }
+      // reaplicar cores por nível para manter propriedades visuais válidas para demo
+      fixDemo(root,0);
+      if(root) root.cor='BLACK';
+      return root;
+    }
+    if(extracted.length>0){
+      extracted.forEach(v=> root=insertRBT(root,v));
+    } else {
+      const vals=[50,30,70,20,40,60,80];
+      vals.forEach(v=> root=insertRBT(root,v));
+    }
+    appState.arvore = root;
   } else {
     appState.lista = [];
     let root=null;

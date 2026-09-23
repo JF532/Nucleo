@@ -195,10 +195,30 @@ No* inserir(No *no, int v){
     z->valor = v;
     z->cor = RED;
     z->esquerda = z->direita = z->pai = NULL;
-    // inserir como BST e depois corrigir
-    // ... (logica BST + corrigirInsercao(z))
-    return z;
-}`
+    if(no == NULL){
+        raiz = z;
+        z->cor = BLACK;
+        return z;
+    }
+    No *y = NULL;
+    No *x = no;
+    while(x != NULL){
+        y = x;
+        if(v < x->valor) x = x->esquerda;
+        else x = x->direita;
+    }
+    z->pai = y;
+    if(v < y->valor) y->esquerda = z;
+    else y->direita = z;
+    corrigirInsercao(z);
+    return no;
+}
+
+// Exemplo de uso:
+// raiz = inserir(raiz, 50);
+// raiz = inserir(raiz, 30);
+// raiz = inserir(raiz, 70);
+`
 };
 
 export function initEditor({ textarea, gutter, highlightEl }) {

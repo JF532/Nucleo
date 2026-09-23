@@ -1,35 +1,54 @@
-function collectNodes(root){
+function collectNodes(root, showNIL=false){
   const nodes=[];
   const edges=[];
   if(!root) return {nodes, edges};
-  const queue=[{n:root, x:0, y:0, parent:null}];
-  // Use inorder to compute x positions? Simpler: BFS level layout
-  // We'll compute positions via inorder index for better spacing
+  // detectar RBT (tem cor)
+  const isRBT = root && (root.cor !== undefined);
+  const doShowNIL = showNIL || isRBT;
   let inorderIdx=0;
   const posMap=new Map();
   function inorder(n, depth){
     if(!n) return;
+    // para RBT, NIL não entra no inorder (são folhas virtuais)
+    if(n.isNIL) return;
     inorder(n.esq, depth+1);
     posMap.set(n, { x: inorderIdx++, y: depth });
     inorder(n.dir, depth+1);
   }
   inorder(root,0);
-  // Now traverse again to collect
   function traverse(n, parent){
     if(!n) return;
     const p = posMap.get(n);
-    nodes.push({ n, x:p.x, y:p.y, parent });
-    if(n.esq){
-      edges.push({ from:n, to:n.esq });
-      traverse(n.esq, n);
+    // se não tem pos (NIL isolado), criar pos provisória
+    const pos = p || {x: inorderIdx++, y: (parent ? posMap.get(parent).y+1 : 0)};
+    if(!p) posMap.set(n, pos);
+    nodes.push({ n, x:pos.x, y:pos.y, parent });
+    const left = n.esq;
+    const right = n.dir;
+    if(left){
+      edges.push({ from:n, to:left });
+      traverse(left, n);
+    } else if(doShowNIL){
+      const nilNode = {valor:'NIL', isNIL:true, cor:'BLACK'};
+      const nilPos = {x: pos.x - 0.5, y: pos.y+1};
+      // ajustar inorder para NIL: usar pos.x -0.5
+      nodes.push({ n:nilNode, x:nilPos.x, y:nilPos.y, parent:n, isNIL:true });
+      edges.push({ from:n, to:nilNode });
     }
-    if(n.dir){
-      edges.push({ from:n, to:n.dir });
-      traverse(n.dir, n);
+    if(right){
+      edges.push({ from:n, to:right });
+      traverse(right, n);
+    } else if(doShowNIL){
+      const nilNode2 = {valor:'NIL', isNIL:true, cor:'BLACK'};
+      const nilPos2 = {x: pos.x + 0.5, y: pos.y+1};
+      nodes.push({ n:nilNode2, x:nilPos2.x, y:nilPos2.y, parent:n, isNIL:true });
+      edges.push({ from:n, to:nilNode2 });
     }
   }
   traverse(root,null);
-  return { nodes, edges, width: inorderIdx };
+  // recalcular width para incluir NILs
+  const maxX = Math.max(...nodes.map(d=>d.x), inorderIdx);
+  return { nodes, edges, width: Math.ceil(maxX+1) };
 }
 
 export function renderTree(container, root, meta, step){
@@ -76,40 +95,92 @@ export function renderTree(container, root, meta, step){
     svg.appendChild(line);
   });
 
-  // nodes - com trilha
+  // nodes - com trilha e RBT cores
+  const isRBT = root && root.cor !== undefined;
   nodes.forEach(d=>{
     const cx = margin + d.x*nodeSpacingX + 28;
     const cy = margin + d.y*nodeSpacingY + 28;
     const isActive = step && step.activeValue===d.n.valor;
     const isInPath = step && step.highlightPath && step.highlightPath.includes(d.n.valor);
+    const isNIL = d.n.isNIL || d.isNIL;
     const g=document.createElementNS(svgNS,'g');
     const circle=document.createElementNS(svgNS,'circle');
     circle.setAttribute('cx',cx); circle.setAttribute('cy',cy);
-    circle.setAttribute('r',26);
-    if(isActive){
+    if(isNIL){
+      circle.setAttribute('r',18);
+      circle.setAttribute('fill', '#0f172a');
+      circle.setAttribute('stroke', '#475569');
+      circle.setAttribute('stroke-width', '1.2');
+      circle.setAttribute('stroke-dasharray', '4 3');
+      circle.setAttribute('opacity', '0.7');
+    } else if(isRBT){
+      const cor = d.n.cor;
+      const isRed = cor === 'RED' || cor === 1 || cor === 'VERMELHO' || cor === 'R' || cor === '1';
+      const isActiveRed = isActive;
+      if(isActive){
+        circle.setAttribute('r',26);
+        circle.setAttribute('fill', isRed ? '#dc2626' : '#111827');
+        circle.setAttribute('stroke', isRed ? '#ef4444' : '#374151');
+        circle.setAttribute('stroke-width', '3');
+        circle.setAttribute('filter','drop-shadow(0 0 8px rgba(239,68,68,.5))');
+      } else if(isInPath){
+        circle.setAttribute('r',26);
+        circle.setAttribute('fill', isRed ? 'rgba(220,38,38,0.18)' : 'rgba(17,24,39,0.9)');
+        circle.setAttribute('stroke', isRed ? '#ef4444' : '#475569');
+        circle.setAttribute('stroke-width', '2.2');
+      } else {
+        circle.setAttribute('r',26);
+        circle.setAttribute('fill', isRed ? '#dc2626' : '#111827');
+        circle.setAttribute('stroke', isRed ? '#991b1b' : '#1f2937');
+        circle.setAttribute('stroke-width', '1.5');
+      }
+    } else if(isActive){
+      circle.setAttribute('r',26);
       circle.setAttribute('fill', '#fbbf24');
       circle.setAttribute('stroke', '#f59e0b');
       circle.setAttribute('stroke-width', '3');
       circle.setAttribute('filter','drop-shadow(0 0 8px rgba(251,191,36,.6))');
     } else if(isInPath){
+      circle.setAttribute('r',26);
       circle.setAttribute('fill', 'rgba(56,189,248,0.18)');
       circle.setAttribute('stroke', '#38bdf8');
       circle.setAttribute('stroke-width', '2.2');
     } else {
+      circle.setAttribute('r',26);
       circle.setAttribute('fill', '#1e293b');
       circle.setAttribute('stroke', '#475569');
       circle.setAttribute('stroke-width', '1.5');
     }
     svg.appendChild(circle);
     const text=document.createElementNS(svgNS,'text');
-    text.setAttribute('x',cx); text.setAttribute('y',cy+5);
+    text.setAttribute('x',cx); text.setAttribute('y', isNIL ? cy+4 : (isRBT ? cy+2 : cy+5));
     text.setAttribute('text-anchor','middle');
-    text.setAttribute('fill', isActive ? '#0f172a' : '#e2e8f0');
-    text.setAttribute('font-size','13');
-    text.setAttribute('font-weight','700');
+    if(isNIL){
+      text.setAttribute('fill', '#64748b');
+      text.setAttribute('font-size','9');
+      text.setAttribute('font-weight','600');
+      text.textContent = 'NIL';
+    } else {
+      text.setAttribute('fill', isActive ? '#0f172a' : '#e2e8f0');
+      text.setAttribute('font-size','13');
+      text.setAttribute('font-weight','700');
+      text.textContent = d.n.valor;
+    }
     text.setAttribute('font-family','ui-monospace, monospace');
-    text.textContent = d.n.valor;
     svg.appendChild(text);
+    // R/B label para RBT
+    if(isRBT && !isNIL){
+      const cor = d.n.cor;
+      const isRed = cor === 'RED' || cor === 1 || cor === 'VERMELHO' || cor === 'R';
+      const corLabel=document.createElementNS(svgNS,'text');
+      corLabel.setAttribute('x',cx); corLabel.setAttribute('y',cy+16);
+      corLabel.setAttribute('text-anchor','middle');
+      corLabel.setAttribute('fill', isRed ? '#fecaca' : '#94a3b8');
+      corLabel.setAttribute('font-size','8');
+      corLabel.setAttribute('font-weight','700');
+      corLabel.textContent = isRed ? 'R' : 'B';
+      svg.appendChild(corLabel);
+    }
     // raiz label
     if(!d.parent){
       const raizLab=document.createElementNS(svgNS,'text');
