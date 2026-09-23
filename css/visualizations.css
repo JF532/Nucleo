@@ -67,6 +67,8 @@
 .tree-svg-wrap{width:100%;overflow:auto;display:flex;justify-content:center}
 .tree-svg{overflow:visible}
 .tree-edge{stroke:var(--text-muted);stroke-width:1.6}
-.tree-edge.active{stroke:var(--accent);stroke-width:2.4}
+.tree-edge.active{stroke:var(--accent);stroke-width:2.6}
+.tree-edge.in-path{stroke:var(--accent);stroke-width:2.0;stroke-dasharray:5 4;opacity:0.85}
+.node-box.tree.in-path{border-color:var(--accent);background:rgba(56,189,248,0.14);box-shadow:0 0 0 2px rgba(56,189,248,0.25)}
 .traversal-result{margin-top:10px;font-size:13px;color:var(--text-muted)}
 .traversal-result b{color:var(--accent)}

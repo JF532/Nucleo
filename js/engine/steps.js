@@ -362,14 +362,14 @@ export function stepsTreeInsert(raiz, valor, isBST, meta){
       explicacao:`Árvore vazia, ${valor} torna-se raiz.`,
       ponteirosAlterados:'raiz',
       snapshot: cloneTree(newRoot),
-      activeValue: valor
+      activeValue: valor,
+      highlightPath: [valor]
     });
     return { steps, newState: newRoot };
   }
-  // For BST, show comparisons
   if(isBST){
     let current = raiz;
-    let path = [];
+    let path = [current.valor];
     steps.push({
       titulo:'Passo 1 — Iniciar na raiz',
       codigo:`No *atual = raiz; // ${current.valor}`,
@@ -377,103 +377,183 @@ export function stepsTreeInsert(raiz, valor, isBST, meta){
       ponteirosAlterados:'atual',
       snapshot: cloneTree(raiz),
       activeValue: current.valor,
-      highlightPath: [current.valor]
+      highlightPath: [...path]
     });
+    let passo=2;
     while(true){
       if(valor < current.valor){
         steps.push({
-          titulo:`Comparar ${valor} < ${current.valor} → esquerda`,
+          titulo:`Passo ${passo++} — Comparar ${valor} < ${current.valor} → esquerda`,
           codigo:`if(${valor} < atual->${meta.no.valor||'valor'}) atual = atual->${meta.no.esquerda||'esquerda'};`,
-          explicacao:`${valor} é menor que ${current.valor}, indo para esquerda.`,
+          explicacao:`${valor} é menor que ${current.valor}, descendo para esquerda.`,
           ponteirosAlterados:`atual->${meta.no.esquerda||'esquerda'}`,
           snapshot: cloneTree(raiz),
-          activeValue: current.valor
+          activeValue: current.valor,
+          highlightPath: [...path]
         });
         if(!current.esq){
           current.esq = createTreeNode(valor);
+          path.push(valor);
           steps.push({
-            titulo:'Posição encontrada — inserir',
-            codigo:`atual->${meta.no.esquerda||'esquerda'} = novo;`,
+            titulo:`Passo ${passo} — Posição encontrada — inserir à esquerda de ${current.valor}`,
+            codigo:`atual->${meta.no.esquerda||'esquerda'} = novo; // ${valor}`,
             explicacao:`Posição vazia à esquerda de ${current.valor}, inserindo ${valor}.`,
             ponteirosAlterados:`atual->${meta.no.esquerda||'esquerda'}`,
             snapshot: cloneTree(raiz),
-            activeValue: valor
+            activeValue: valor,
+            highlightPath: [...path]
           });
           break;
         } else {
           current = current.esq;
+          path.push(current.valor);
           steps.push({
-            titulo:`Avançar para ${current.valor}`,
-            codigo:`atual = atual->${meta.no.esquerda||'esquerda'};`,
-            explicacao:`Agora em ${current.valor}, continuar comparação.`,
+            titulo:`Passo ${passo++} — Descer para ${current.valor}`,
+            codigo:`atual = atual->${meta.no.esquerda||'esquerda'}; // ${current.valor}`,
+            explicacao:`Descendo para ${current.valor}, continuar comparação. Caminho: ${path.join(' → ')}`,
             ponteirosAlterados:'atual',
             snapshot: cloneTree(raiz),
-            activeValue: current.valor
+            activeValue: current.valor,
+            highlightPath: [...path]
           });
         }
       } else if(valor > current.valor){
         steps.push({
-          titulo:`Comparar ${valor} > ${current.valor} → direita`,
+          titulo:`Passo ${passo++} — Comparar ${valor} > ${current.valor} → direita`,
           codigo:`if(${valor} > atual->${meta.no.valor||'valor'}) atual = atual->${meta.no.direita||'direita'};`,
-          explicacao:`${valor} é maior que ${current.valor}, indo para direita.`,
+          explicacao:`${valor} é maior que ${current.valor}, descendo para direita.`,
           ponteirosAlterados:`atual->${meta.no.direita||'direita'}`,
           snapshot: cloneTree(raiz),
-          activeValue: current.valor
+          activeValue: current.valor,
+          highlightPath: [...path]
         });
         if(!current.dir){
           current.dir = createTreeNode(valor);
+          path.push(valor);
           steps.push({
-            titulo:'Posição encontrada — inserir',
-            codigo:`atual->${meta.no.direita||'direita'} = novo;`,
+            titulo:`Passo ${passo} — Posição encontrada — inserir à direita de ${current.valor}`,
+            codigo:`atual->${meta.no.direita||'direita'} = novo; // ${valor}`,
             explicacao:`Posição vazia à direita de ${current.valor}, inserindo ${valor}.`,
             ponteirosAlterados:`atual->${meta.no.direita||'direita'}`,
             snapshot: cloneTree(raiz),
-            activeValue: valor
+            activeValue: valor,
+            highlightPath: [...path]
           });
           break;
         } else {
           current = current.dir;
+          path.push(current.valor);
           steps.push({
-            titulo:`Avançar para ${current.valor}`,
-            codigo:`atual = atual->${meta.no.direita||'direita'};`,
-            explicacao:`Agora em ${current.valor}, continuar.`,
+            titulo:`Passo ${passo++} — Descer para ${current.valor}`,
+            codigo:`atual = atual->${meta.no.direita||'direita'}; // ${current.valor}`,
+            explicacao:`Descendo para ${current.valor}, continuar. Caminho: ${path.join(' → ')}`,
             ponteirosAlterados:'atual',
             snapshot: cloneTree(raiz),
-            activeValue: current.valor
+            activeValue: current.valor,
+            highlightPath: [...path]
           });
         }
       } else {
         steps.push({
-          titulo:'Valor já existe',
+          titulo:`Valor já existe`,
           codigo:`// valor ${valor} já presente`,
-          explicacao:`BST não permite duplicatas, operação ignorada.`,
+          explicacao:`BST não permite duplicatas, operação ignorada. Caminho: ${path.join(' → ')}`,
           ponteirosAlterados:'—',
           snapshot: cloneTree(raiz),
-          activeValue: current.valor
+          activeValue: current.valor,
+          highlightPath: [...path]
         });
         break;
       }
     }
     return { steps, newState: raiz };
   } else {
-    // generic binary level-order
+    // Árvore binária genérica — descida BFS nível a nível
+    const queue = [{node: raiz, path: [raiz.valor]}];
+    const visitedOrder=[];
+    let passo=1;
     steps.push({
-      titulo:'Passo 1 — Inserção em árvore binária (nível)',
-      codigo:`// inserir ${valor} na primeira posição livre (BFS)`,
-      explicacao:`Procurando primeiro espaço vazio em largura.`,
-      ponteirosAlterados:'—',
+      titulo:`Passo ${passo++} — Iniciar BFS na raiz`,
+      codigo:`fila = [raiz]; // ${raiz.valor}`,
+      explicacao:`Começando busca em largura a partir da raiz ${raiz.valor} para encontrar primeiro espaço vazio.`,
+      ponteirosAlterados:'fila',
       snapshot: cloneTree(raiz),
-      activeValue: null
+      activeValue: raiz.valor,
+      highlightPath: [raiz.valor]
     });
-    insertBinary(raiz, valor);
-    steps.push({
-      titulo:'Passo 2 — Inserido',
-      codigo:`// nó ${valor} inserido`,
-      explicacao:`Nó ${valor} alocado e encadeado.`,
-      ponteirosAlterados:'pai->esq/dir',
-      snapshot: cloneTree(raiz),
-      activeValue: valor
-    });
+    while(queue.length){
+      const {node, path} = queue.shift();
+      visitedOrder.push(node.valor);
+      // checar filho esquerdo
+      if(!node.esq){
+        steps.push({
+          titulo:`Passo ${passo++} — Posição livre à esquerda de ${node.valor}`,
+          codigo:`if(${node.valor}->${meta.no.esquerda||'esquerda'} == NULL) ${node.valor}->${meta.no.esquerda||'esquerda'} = novo; // ${valor}`,
+          explicacao:`Encontrado espaço vazio à esquerda de ${node.valor}. Descida: ${path.join(' → ')} → inserir ${valor} à esquerda.`,
+          ponteirosAlterados:`${node.valor}->${meta.no.esquerda||'esquerda'}`,
+          snapshot: cloneTree(raiz),
+          activeValue: node.valor,
+          highlightPath: [...path]
+        });
+        node.esq = createTreeNode(valor);
+        steps.push({
+          titulo:`Passo ${passo} — Inserido à esquerda de ${node.valor}`,
+          codigo:`// nó ${valor} inserido`,
+          explicacao:`Nó ${valor} alocado e encadeado como filho esquerdo de ${node.valor}. Caminho BFS: ${path.join(' → ')} → ${valor}`,
+          ponteirosAlterados:`${node.valor}->${meta.no.esquerda||'esquerda'}`,
+          snapshot: cloneTree(raiz),
+          activeValue: valor,
+          highlightPath: [...path, valor]
+        });
+        break;
+      } else {
+        const newPath = [...path, node.esq.valor];
+        steps.push({
+          titulo:`Passo ${passo++} — Descer para ${node.esq.valor} (esquerda de ${node.valor})`,
+          codigo:`atual = ${node.valor}->${meta.no.esquerda||'esquerda'}; // ${node.esq.valor}`,
+          explicacao:`Esquerda de ${node.valor} ocupada por ${node.esq.valor}, descendo. Caminho: ${newPath.join(' → ')}`,
+          ponteirosAlterados:`${node.valor}->${meta.no.esquerda||'esquerda'}`,
+          snapshot: cloneTree(raiz),
+          activeValue: node.esq.valor,
+          highlightPath: [...newPath]
+        });
+        queue.push({node: node.esq, path: newPath});
+      }
+      if(!node.dir){
+        steps.push({
+          titulo:`Passo ${passo++} — Posição livre à direita de ${node.valor}`,
+          codigo:`if(${node.valor}->${meta.no.direita||'direita'} == NULL) ${node.valor}->${meta.no.direita||'direita'} = novo; // ${valor}`,
+          explicacao:`Espaço vazio à direita de ${node.valor}. Descida: ${path.join(' → ')} → inserir ${valor} à direita.`,
+          ponteirosAlterados:`${node.valor}->${meta.no.direita||'direita'}`,
+          snapshot: cloneTree(raiz),
+          activeValue: node.valor,
+          highlightPath: [...path]
+        });
+        node.dir = createTreeNode(valor);
+        steps.push({
+          titulo:`Passo ${passo} — Inserido à direita de ${node.valor}`,
+          codigo:`// nó ${valor} inserido`,
+          explicacao:`Nó ${valor} alocado como filho direito de ${node.valor}. Caminho BFS: ${path.join(' → ')} → ${valor}`,
+          ponteirosAlterados:`${node.valor}->${meta.no.direita||'direita'}`,
+          snapshot: cloneTree(raiz),
+          activeValue: valor,
+          highlightPath: [...path, valor]
+        });
+        break;
+      } else {
+        const newPath = [...path, node.dir.valor];
+        steps.push({
+          titulo:`Passo ${passo++} — Descer para ${node.dir.valor} (direita de ${node.valor})`,
+          codigo:`atual = ${node.valor}->${meta.no.direita||'direita'}; // ${node.dir.valor}`,
+          explicacao:`Direita de ${node.valor} ocupada por ${node.dir.valor}, descendo. Caminho: ${newPath.join(' → ')}`,
+          ponteirosAlterados:`${node.valor}->${meta.no.direita||'direita'}`,
+          snapshot: cloneTree(raiz),
+          activeValue: node.dir.valor,
+          highlightPath: [...newPath]
+        });
+        queue.push({node: node.dir, path: newPath});
+      }
+    }
     return { steps, newState: raiz };
   }
 }

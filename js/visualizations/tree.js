@@ -56,7 +56,7 @@ export function renderTree(container, root, meta, step){
   svg.setAttribute('class','tree-svg');
   svg.style.minWidth = svgW+'px';
 
-  // edges
+  // edges - com trilha highlightPath
   edges.forEach(e=>{
     const fromPos = nodes.find(d=>d.n===e.from);
     const toPos = nodes.find(d=>d.n===e.to);
@@ -67,23 +67,39 @@ export function renderTree(container, root, meta, step){
     const line=document.createElementNS(svgNS,'line');
     line.setAttribute('x1',x1); line.setAttribute('y1',y1);
     line.setAttribute('x2',x2); line.setAttribute('y2',y2);
-    line.setAttribute('class','tree-edge'+ (step && step.activeValue!==undefined && (e.from.valor===step.activeValue || e.to.valor===step.activeValue) ? ' active':''));
+    const isActiveEdge = step && step.activeValue!==undefined && (e.from.valor===step.activeValue || e.to.valor===step.activeValue);
+    const isInPath = step && step.highlightPath && step.highlightPath.includes(e.from.valor) && step.highlightPath.includes(e.to.valor);
+    let cls='tree-edge';
+    if(isActiveEdge) cls+=' active';
+    else if(isInPath) cls+=' in-path';
+    line.setAttribute('class',cls);
     svg.appendChild(line);
   });
 
-  // nodes
+  // nodes - com trilha
   nodes.forEach(d=>{
     const cx = margin + d.x*nodeSpacingX + 28;
     const cy = margin + d.y*nodeSpacingY + 28;
     const isActive = step && step.activeValue===d.n.valor;
+    const isInPath = step && step.highlightPath && step.highlightPath.includes(d.n.valor);
     const g=document.createElementNS(svgNS,'g');
     const circle=document.createElementNS(svgNS,'circle');
     circle.setAttribute('cx',cx); circle.setAttribute('cy',cy);
     circle.setAttribute('r',26);
-    circle.setAttribute('fill', isActive ? '#fbbf24' : '#1e293b');
-    circle.setAttribute('stroke', isActive ? '#f59e0b' : '#475569');
-    circle.setAttribute('stroke-width', isActive ? '3' : '1.5');
-    if(isActive) circle.setAttribute('filter','drop-shadow(0 0 8px rgba(251,191,36,.6))');
+    if(isActive){
+      circle.setAttribute('fill', '#fbbf24');
+      circle.setAttribute('stroke', '#f59e0b');
+      circle.setAttribute('stroke-width', '3');
+      circle.setAttribute('filter','drop-shadow(0 0 8px rgba(251,191,36,.6))');
+    } else if(isInPath){
+      circle.setAttribute('fill', 'rgba(56,189,248,0.18)');
+      circle.setAttribute('stroke', '#38bdf8');
+      circle.setAttribute('stroke-width', '2.2');
+    } else {
+      circle.setAttribute('fill', '#1e293b');
+      circle.setAttribute('stroke', '#475569');
+      circle.setAttribute('stroke-width', '1.5');
+    }
     svg.appendChild(circle);
     const text=document.createElementNS(svgNS,'text');
     text.setAttribute('x',cx); text.setAttribute('y',cy+5);
@@ -116,6 +132,15 @@ export function renderTree(container, root, meta, step){
 
   wrap.appendChild(svg);
   container.appendChild(wrap);
+
+  // trilha da descida (highlightPath)
+  if(step && step.highlightPath && step.highlightPath.length>1){
+    const div=document.createElement('div');
+    div.className='traversal-result';
+    div.style.cssText='margin-top:8px;font-size:12px;color:var(--text-muted)';
+    div.innerHTML = `Descida: <b style="color:var(--accent)">${step.highlightPath.join(' → ')}</b>`;
+    container.appendChild(div);
+  }
 
   // traversal partial result
   if(step && step.resultadoParcial){
