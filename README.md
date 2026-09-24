@@ -1,168 +1,97 @@
-# VisualizaC
+# Núcleo
 
-**Visualizador Interativo de Estruturas de Dados em C — focado nas cadeiras de AED (Algoritmos e Estruturas de Dados) da faculdade.**
+**Plataforma Interativa para Aprendizagem de Computação — Estruturas de Dados, Autômatos e mais.**
 
-Cole um código em `C` com `struct` e ponteiros, clique em **Analisar código** e o sistema identifica automaticamente a estrutura, monta a visualização e libera operações passo a passo — sem precisar escolher manualmente “Pilha”, “Fila”, etc.
-
----
-
-## 🎯 Objetivo nas cadeiras de AED
-
-Ajudar estudantes de Ciência da Computação a **ver** o que o código faz com a memória:
-
-* Como `struct No { int valor; struct No *prox; }` forma listas, pilhas, filas e árvores
-* Como `malloc`, `prox`, `ant`, `esquerda/direita`, `topo`, `inicio/fim`, `pai` e `cor` alteram ponteiros
-* Como cada operação (`inserir`, `remover`, `empilhar`, `enfileirar`, `rotacionar`) muda a estrutura em etapas com código C, explicação e estado dos ponteiros lado a lado
-
-O foco não é compilar C de verdade, mas **interpretar padrões em JavaScript** e simular com uma representação interna segura.
+Cole código C ou monte um autômato e veja a execução passo a passo com explicação, código destacado e estados visuais — com o Professor Ricardo guiando.
 
 ---
 
-## 🧩 Estruturas suportadas
+## Visão Geral
 
-Detecção automática por **tokens, regex e pontuação** (sem compilador completo):
+Plataforma dual com abas em `index.html`:
 
-| Estrutura | Sinais principais |
+* **Estruturas de Dados** — tema claro, editor C com detecção automática
+* **Autômatos Finitos** — tema dark ouro (`css/automata.css`), editor visual SVG `800x520`
+
+Troca via `nav.tabs` (`#tabEstruturas` / `#tabAutomatos`) com `showEstruturas()/showAutomatos()` e suporte a `#automatos`.
+
+---
+
+## 1. Estruturas de Dados em C
+
+Detecção por `js/analyzer/{tokenizer,patterns,scorer,detector}.js` (regex em `struct`, `prox/ant`, `topo`, `esq/dir`, `cor/pai`, sem compilador).
+
+| Estrutura | Sinais |
 |---|---|
-| **Lista simplesmente encadeada** | `struct No *prox` (um ponteiro para o próprio tipo), `inicio` |
-| **Lista duplamente encadeada** | `prox` + `ant/prev` |
-| **Pilha** | `topo/top` + `push/pop` ou `empilhar/desempilhar` + `novo->prox = topo` |
-| **Fila** | `inicio` + `fim` + `enqueue/dequeue` ou `enfileirar/desenfileirar` |
-| **Árvore binária** | `esquerda/esq + direita/dir` |
-| **Árvore binária de busca (BST)** | árvore + `valor < raiz->valor` (regra de ordenação) |
-| **Árvore Rubro-Negra** *(em validação, botão desabilitado)* | `esq/dir + cor + pai + RED/BLACK + rotação + corrigirInsercao` — tratada como estrutura própria, não só “árvore com cor” |
+| Lista simples | `struct No *prox`, `inicio` |
+| Lista dupla | `prox` + `ant/prev` |
+| Pilha | `topo` + `push/pop` |
+| Fila | `inicio` + `fim` + `enqueue/dequeue` |
+| Árvore / BST | `esq/dir` + `valor < raiz->valor` |
+| Rubro-Negra | `cor + pai + RED/BLACK + rotação` |
 
-Se o código tiver `inicio+fim+prox` sem funções de fila, o sistema mostra as possibilidades (`Lista` vs `Fila`) em vez de chutar.
+Fluxo: `colar código → Analisar → Estrutura detectada → visualização + operações`
 
----
-
-## ▶️ Fluxo de uso
-
-```
-Usuário cola código C
-        ↓
-Clica em “Analisar código”
-        ↓
-Sistema analisa (ponteiros, nomes, funções, comparações)
-        ↓
-Mostra “Estrutura detectada: …”
-        ↓
-Cria visualização inicial (ex: [10] → [20] → NULL) e libera operações compatíveis
-```
-
-Exemplo:
-
-```c
-typedef struct No {
-    int valor;
-    struct No *prox;
-} No;
-No *inicio = NULL;
-```
-
-→ **Lista simplesmente encadeada** → `inicio ↓ [10] → [20] → [30] → NULL`
+Visualização em `js/visualizations/*` + `js/engine/*` (steps/history/memory): listas com `prox/ant→NULL`, pilha `topo ↓`, fila `inicio/fim`, árvores SVG com `NIL` e trilha de descida. Controles `← Anterior | ▶ Executar | Próximo → | Reiniciar` + `Memória simulada`.
 
 ---
 
-## 🖥️ Como rodar localmente (sem backend)
+## 2. Autômatos Finitos
 
-Projeto 100% estático — compatível com **GitHub Pages**. Para testar localmente precisa de um servidor HTTP por causa dos `ES Modules`:
+Editor em `js/automata/*` (7 arquivos) — AFD / AFN / AFN-ε.
+
+* **Canvas:** 6 ferramentas `Selecionar ○ Estado → Transição ★ Inicial ◎ Final ⌫ Excluir` (`automata-editor.js` com hit geométrico `r=28/34`, drag, prompt de símbolo com auto-add ao alfabeto)
+* **Alfabeto:** chips `Σ` editáveis + auto-sync (`getEffectiveAlphabet` em `automata-state.js`)
+* **Linguagem:** `textarea` com inferência `inferLanguage` (`L={"a"}`, `possui ao menos um a`, `termina em ab`, `L ⊆ Σ*`)
+* **Formal:** `A=(Q,Σ,δ,q0,F)` e tabela de transições (`toFormal`/`toTableData`)
+* **Validação:** `validate` (sem inicial/final, AFD determinismo, ε, símbolo fora, estado isolado)
+* **Execução:** `runWord` com `epsilonClosure`, highlight de estados/transições, `wordHighlight`, `execPos`, `exec-history` e resultado `✓/✕` (`automata-engine.js` + `automata-main.js`)
+* **Exemplos:** `termina_ab` (triângulo), `par_zeros`, `comeca_1` (2 estados), `contem_101`, `afn_simples` (`possui ao menos um a`, 2 estados), `afn_epsilon`
+
+---
+
+## Como rodar (sem backend)
 
 ```bash
-# na pasta do projeto (use o atalho sem acento para evitar encoding)
-cd "C:\Users\JF\Desktop\Faculdade\PROJETOS\Projeto_AED"
+git clone https://github.com/<seu-usuario>/Projeto_AED.git
+cd Projeto_AED
 python -m http.server 8000
-# abra http://localhost:8000
+# http://localhost:8000
 ```
 
-Ou `npx serve .` / Live Server do VS Code. Abrir `file://` direto não funciona para `import`.
-
 ---
 
-## 🎨 Visualização e passo a passo
-
-* **Lista/ Dupla:** nós com `valor` + `prox → próximo valor / prox → NULL` (dupla mostra `ant → anterior` também), setas entre nós, `NULL` tracejado, `inicio/fim` com `→` lateral (bem arejado, gap 22px, scroll horizontal fino azul)
-* **Pilha:** coluna vertical `topo ↓ [30] → 20 → 10 → NULL` — no estado normal `topo` reto; só no Passo 3 (`novo->prox=topo`) faz **L pela esquerda** para não confundir
-* **Fila:** `inicio → [10] → [20] → NULL` com `fim ↑`
-* **Árvore/BST/RBT:** SVG hierárquico (`inorder` para `x`, `depth` para `y`), `NIL` como folha preta tracejada, nós com `valor + cor` (`VERMELHO/PRETO` + `R/B`) e `pai` quando RBT
-* **Inserção na árvore:** mostra **descida** `50 → 30 → 20` com trilha `highlightPath` e `Descida: 50 → 30` abaixo do SVG
-
-Controles: `[← Anterior] [▶ Executar] [Próximo →] [■ Parar visualização / Reiniciar]` + explicação + código C destacado + `Ponteiros:` + `Memória simulada` com endereços fictícios `0x001`.
-
-Avatares (`Avatares/*.png` 96px, fundo transparente) aparecem em balão saindo do avatar: `Professor Ricardo` (padrão, `professor_ricardo.gif`), `pensando`, `usando_computador`, `joinha`, `comemorando`, `raiva` trocando por contexto; favicon é `acenando.png` croppado.
-
----
-
-## 🔍 Detecção automática — como funciona
-
-`js/analyzer/tokenizer.js` → `patterns.js` → `scorer.js` → `detector.js`
-
-* Não tenta compilar C. Usa regex para `struct`, campos (`prox/next`, `ant/prev`, `esq/left`, `dir/right`, `cor`, `pai/parent`), variáveis globais (`topo`, `inicio/fim`), funções (`push`, `enqueue`, `rotacaoEsquerda`, `corrigirInsercao`) e comparações `valor < raiz->valor`.
-* Cada estrutura ganha pontos (ex: `prox +30`, `ant +30`, `topo+push/pop`, `RED/BLACK +30`). Escolhe maior pontuação com limiar e trata ambiguidade (`lista vs fila` só se `inicio+fim` presentes).
-
-Fácil de estender para debug futuro via `_debug` interno (sem expor pontuação por padrão, conforme pedido).
-
----
-
-## 🌳 Árvore Rubro-Negra — seção própria
-
-A RBT não é “BST colorida”. Tem **painel dedicado**:
-
-* **5 propriedades** visuais com `✓/✗` interativo (Regras 1-5)
-* **Nós** com `valor + PRETO/VERMELHO + R/B`, `NIL` preto
-* **Inserção em 5 etapas:** achar posição (BST) → criar vermelho → checar pai → identificar `pai/avô/tio` → Caso A (tio vermelho → recolorir) / Caso B (triangular → rotação) / Caso C (linear → rotação + recolorir) com espelho direita
-* **Rotações** à esquerda/direita com destaque de `X/Y`, filho transferido e `pai/raiz`
-* **Recoloração** como etapa própria com animação
-* **Validação** em tempo real, **remoção** com `duplo preto` e casos do irmão, **travessias** `pré/em/pós` animadas nó a nó
-* Comparação `BST vs Rubro-Negra` sobre balanceamento
-* Exemplo pronto em `Carregar exemplo` (botão **desabilitado** em validação, para testar antes de liberar)
-
-> Observação pedida: nós com cores reais **vermelho e preto** (não só borda), e botão RBT desabilitado para testes.
-
----
-
-## 📁 Estrutura do projeto
+## Estrutura do projeto
 
 ```
 /
 ├── index.html
-├── favicon.ico (+ Avatares/favicon-*.png)
-├── Avatares/ (acenando, pensando, usando_computador, joinha, comemorando, raiva, professor_ricardo.gif)
-├── css/
-│   ├── variables.css
-│   ├── layout.css (grid, visualization 460px, scroll formatado, avatar 96px)
-│   ├── editor.css (gutter + highlight overlay)
-│   └── visualizations.css (nodes, arrows, fork SVG, tree)
+├── Avatares/ (professor_ricardo.gif + 6 estados)
+├── css/ variables.css, layout.css, editor.css, visualizations.css, automata.css
 ├── js/
-│   ├── main.js (bootstrap, buildOperations, History, avatar dinâmico, pilha topo reto)
-│   ├── editor.js (gutter, highlight.js CDN com fallback, examples)
+│   ├── main.js, editor.js
 │   ├── analyzer/ (tokenizer, patterns, scorer, detector)
 │   ├── engine/ (steps, history, memory)
-│   └── visualizations/ (list, doubly, stack, queue, tree, rbt)
-└── .nojekyll (desativa Jekyll no GitHub Pages)
+│   ├── visualizations/ (list, doubly, stack, queue, tree)
+│   └── automata/ (state, examples, engine, validator, renderer, editor, main)
+└── .nojekyll
 ```
 
-Reutiliza `History`, `steps`, `render*`, `memory`, `detector` existentes — nada das outras estruturas foi refeito.
+---
+
+## Testes
+
+* Lista/Dupla/Pilha/Fila/Árvore/BST/RBT: inserir/remover/buscar, rotações RBT
+* Autômatos: `termina_ab` (`ab` ok), `comeca_1` (`10` ok, `0` rejeitado), `afn_simples` (`bab` ok)
 
 ---
 
-## ✅ Testes que o projeto cobre
+## Foco
 
-* Lista: inserir no início/meio/fim, remover início/meio/fim, buscar
-* Dupla: idem com `ant/prev` nos dois sentidos
-* Pilha: empilhar/desempilhar/consultar topo
-* Fila: enfileirar/desenfileirar/consultar início/fim + remover por valor
-* Árvore/BST: inserir, remover, buscar, pré/em/pós-ordem
-* RBT: 12 cenários — inserção sem violação, tio vermelho, rotação esq/dir, triangular/linear espelhado, recoloração, remoção (duplo preto), travessias, validação das 5 propriedades, botões de passos
+Plataforma para **Ciência da Computação** — extensível para novas disciplinas (Grafos, Compiladores, etc.) além de AED.
 
 ---
 
-## 📚 Foco
+## Autor
 
-Projeto feito **focando nas cadeiras de AED** — para estudar e demonstrar estruturas encadeadas e arbóreas em C de forma visual, interativa e didática.
-
----
-
-## 👤 Autor
-
-Desenvolvido por **João Filipe** — Projeto educacional **VisualizaC**.
+Desenvolvido por **João Filipe** — Projeto educacional **Núcleo**.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VisualizaC — Visualizador Interativo de Estruturas de Dados em C</title>
+<title>Núcleo — Plataforma Interativa para Aprendizagem de Computação</title>
 <meta name="description" content="Cole código C e visualize estruturas de dados de forma interativa.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="Avatares/favicon-32.png">
@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/editor.css">
 <link rel="stylesheet" href="css/visualizations.css">
+<link rel="stylesheet" href="css/automata.css">
 </head>
 <body>
 <header class="topbar">
@@ -28,13 +29,18 @@
     <div class="brand">
       <span class="brand-icon">◈</span>
       <div>
-        <h1>VisualizaC</h1>
+        <h1>Núcleo</h1>
       </div>
     </div>
+    <nav class="tabs" aria-label="Navegação principal">
+      <button id="tabEstruturas" class="tab active">Estruturas de Dados</button>
+      <button id="tabAutomatos" class="tab">Autômatos</button>
+    </nav>
   </div>
 </header>
 
 <main class="container">
+  <div id="estruturasView">
   <section class="panel editor-panel">
     <div class="panel-header">
       <h2>Editor de Código C</h2>
@@ -142,8 +148,123 @@ No *inicio = NULL;"></textarea>
     </div>
   </section>
 
+  </div><!-- /estruturasView -->
+
+  <div id="automatosView" class="hidden automata-theme">
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Autômatos Finitos — Editor Visual</h2>
+        <div class="panel-actions">
+          <select id="automataExampleSelect" class="select">
+            <option value="">Carregar exemplo…</option>
+            <option value="termina_ab">Termina com ab — {a,b}</option>
+            <option value="par_zeros">Par de 0 — {0,1}</option>
+            <option value="comeca_1">Começa com 1 — {0,1}</option>
+            <option value="contem_101">Contém 101 — {0,1}</option>
+            <option value="afn_simples">AFN simples — múltiplos caminhos</option>
+            <option value="afn_epsilon">AFN-ε — com epsilon</option>
+          </select>
+          <button id="btnAutomataClear" class="btn btn-ghost">Limpar tudo</button>
+        </div>
+      </div>
+      <div style="padding:12px 16px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+        <div style="flex:1; min-width:260px;">
+          <div class="panel" style="padding:10px;">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;"><b>Alfabeto</b> Σ = {<span id="alphabetChips"></span>} <span style="margin-left:8px;"></span></div>
+            <div class="op-row" style="margin-top:6px;">
+              <input id="inputNewSymbol" type="text" placeholder="símbolo (a,b,0,1,ε)" maxlength="5" style="width:140px">
+              <button id="btnAddSymbol" class="btn btn-ghost">+ Adicionar</button>
+            </div>
+          </div>
+          <div class="panel" style="margin-top:10px; padding:10px;">
+            <div style="font-size:12px; color:var(--text-muted);"><b>Linguagem</b></div>
+            <textarea id="languageDesc" rows="2" style="width:100%; margin-top:6px; background:#0B0D0E; color:#E0C36E; border:1px solid #252A2D; border-radius:8px; padding:8px; font-size:12px;" placeholder="Ex.: L = { w | w termina com ab }"></textarea>
+          </div>
+          <div class="panel" style="margin-top:10px; padding:10px;">
+            <div style="font-size:12px; color:var(--text-muted);"><b>Tipo</b></div>
+            <label style="font-size:13px; margin-right:12px;"><input type="radio" name="automataType" value="AFD" checked> AFD</label>
+            <label style="font-size:13px; margin-right:12px;"><input type="radio" name="automataType" value="AFN"> AFN</label>
+            <label style="font-size:13px;"><input type="radio" name="automataType" value="AFN-ε"> AFN-ε</label>
+          </div>
+        </div>
+        <div style="flex:1; min-width:260px;">
+          <div id="automataInfo" class="panel" style="padding:10px;"></div>
+          <div id="automataValidation" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="automata-layout" style="margin-top:16px;">
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Canvas — Autômato</h3>
+          <div class="automata-toolbar">
+            <button class="tool-btn active" data-tool="select">↖ Selecionar</button>
+            <button class="tool-btn" data-tool="state">○ Estado</button>
+            <button class="tool-btn" data-tool="trans">→ Transição</button>
+            <button class="tool-btn" data-tool="initial">★ Inicial</button>
+            <button class="tool-btn" data-tool="final">◎ Final</button>
+            <button class="tool-btn" data-tool="delete">⌫ Excluir</button>
+          </div>
+        </div>
+        <div id="automataCanvas" class="visualization automata-canvas-wrap" style="padding:0; min-height:520px;"></div>
+        <div style="padding:8px 12px; font-size:11px; color:var(--text-muted);">Dicas: clique no fundo com ○ Estado para criar; Transição = clique origem → destino → símbolo; duplo clique para renomear; arraste para mover; botão direito na transição remove.</div>
+      </section>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <section class="panel">
+          <div class="panel-header"><h3>Representação formal</h3></div>
+          <pre id="automataFormal" class="formal-block" style="margin:12px;"></pre>
+        </section>
+        <section class="panel">
+          <div class="panel-header"><h3>Tabela de transições</h3></div>
+          <div style="padding:12px;"><div id="automataTableWrap"></div></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="panel" style="margin-top:16px;">
+      <div class="panel-header"><h3>Executar palavra</h3></div>
+      <div style="padding:14px 16px;">
+        <div class="op-row">
+          <input id="inputWord" type="text" placeholder="palavra (ex.: abba)" style="flex:1; min-width:200px;">
+        </div>
+        <div id="wordHighlight" style="margin-top:8px; font-family:ui-monospace, monospace; font-size:14px; letter-spacing:.1em;"></div>
+        <div id="execPos" style="margin-top:6px; font-size:12px; color:var(--text-muted);"></div>
+        <div class="step-controls" style="margin-top:10px; border:1px solid var(--border); border-radius:8px;">
+          <button id="btnExecPrev" class="btn btn-ghost">← Anterior</button>
+          <button id="btnExecPlay" class="btn btn-ghost">▶ Executar</button>
+          <button id="btnExecNext" class="btn btn-primary">Próximo →</button>
+          <button id="btnExecReset" class="btn btn-ghost">Reiniciar</button>
+        </div>
+        <div id="automataStepInfo" class="step-info hidden" style="margin-top:12px;">
+          <div class="avatar-explanation-wrapper">
+            <div class="avatar-container">
+              <img id="automataAvatarImg" class="avatar-img" src="Avatares/professor_ricardo.gif" alt="Professor Ricardo" width="96" height="96" onerror="this.onerror=null;this.src='Avatares/acenando.png'">
+              <span id="automataAvatarLabel" class="avatar-label">Professor Ricardo</span>
+            </div>
+            <div class="speech-bubble" id="automataSpeechBubble">
+              <h4 id="automataStepTitle"></h4>
+              <pre id="automataStepCode" class="step-code" style="display:none"></pre>
+              <p id="automataStepExplanation"></p>
+              <p id="automataStepPointers" class="step-pointers"></p>
+            </div>
+          </div>
+        </div>
+        <div id="execResult" style="margin-top:10px; font-size:16px;"></div>
+        <div id="execDetail" style="margin-top:6px; font-size:12px; color:var(--text-muted);"></div>
+        <div style="margin-top:12px; max-height:240px; overflow:auto; border:1px solid var(--border); border-radius:8px;">
+          <table class="exec-history">
+            <thead><tr><th>Passo</th><th>Símbolo</th><th>Estado(s)</th></tr></thead>
+            <tbody id="execHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <footer class="footer">
-    <p>Desenvolvido por João Filipe — Projeto educacional VisualizaC</p>
+    <p>Desenvolvido por João Filipe — Projeto educacional Núcleo</p>
   </footer>
 </main>
 
@@ -157,5 +278,34 @@ No *inicio = NULL;"></textarea>
   }
 </script>
 <script type="module" src="js/main.js"></script>
+<script type="module" src="js/automata/automata-main.js"></script>
+<script>
+  (function(){
+    const tabEstruturas=document.getElementById('tabEstruturas');
+    const tabAutomatos=document.getElementById('tabAutomatos');
+    const estruturasView=document.getElementById('estruturasView');
+    const automatosView=document.getElementById('automatosView');
+    function showEstruturas(){
+      estruturasView.classList.remove('hidden');
+      automatosView.classList.add('hidden');
+      tabEstruturas.classList.add('active');
+      tabAutomatos.classList.remove('active');
+      document.body.classList.remove('automata-active');
+    }
+    function showAutomatos(){
+      estruturasView.classList.add('hidden');
+      automatosView.classList.remove('hidden');
+      tabAutomatos.classList.add('active');
+      tabEstruturas.classList.remove('active');
+      document.body.classList.add('automata-active');
+      if(window.initAutomataTab) window.initAutomataTab();
+      if(window.refreshAutomata) window.refreshAutomata();
+    }
+    tabEstruturas.addEventListener('click', showEstruturas);
+    tabAutomatos.addEventListener('click', showAutomatos);
+    // hash support
+    if(location.hash==='#automatos') showAutomatos();
+  })();
+</script>
 </body>
 </html>

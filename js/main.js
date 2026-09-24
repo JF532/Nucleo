@@ -741,7 +741,7 @@ function renderCurrent(stepOverride){
         else if(src.includes('pensando')) avatarLabel.textContent = 'Hmm...';
         else if(src.includes('computador')) avatarLabel.textContent = 'Criando...';
         else if(src.includes('professor')) avatarLabel.textContent = 'Professor Ricardo';
-        else avatarLabel.textContent = 'VisualizaC';
+        else avatarLabel.textContent = 'Núcleo';
       }
       // se for gif do professor, garantir que o alt indique
       if(src.includes('professor')) avatarImg.alt = 'Professor Ricardo';
