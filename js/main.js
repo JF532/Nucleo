@@ -134,6 +134,15 @@ function resetOpsBlur(){
     if(btnPop) setDisabled(btnPop,false);
     if(btnTopo) setDisabled(btnTopo,false);
   }
+  // fila: desenfileirar/consultar inicio/fim nao precisam de input, reabilitar se houver elementos
+  if(currentTipo==='fila' && appState.lista.length>0){
+    const btnDeq=document.getElementById('btnDeq');
+    const btnInicio=document.getElementById('btnInicio');
+    const btnFim=document.getElementById('btnFim');
+    if(btnDeq) setDisabled(btnDeq,false);
+    if(btnInicio) setDisabled(btnInicio,false);
+    if(btnFim) setDisabled(btnFim,false);
+  }
 }
 
 // memory toggle
@@ -523,23 +532,24 @@ function buildOperations(){
     function updEnq(){ setDisabled(btnEnq, enqValor.value.trim()==='' || isNaN(parseInt(enqValor.value,10))); }
     function updRem(){ setDisabled(btnRemValor, remValorFila.value.trim()==='' || isNaN(parseInt(remValorFila.value,10))); }
     function updBus(){ setDisabled(btnBuscar, buscaValor.value.trim()==='' || isNaN(parseInt(buscaValor.value,10))); }
-    function updSem(){
-      const any = enqValor.value.trim()!=='' || remValorFila.value.trim()!=='' || buscaValor.value.trim()!=='';
-      setDisabled(btnDeq, !any);
-      setDisabled(btnInicio, !any);
-      setDisabled(btnFim, !any);
+    function updFilaSemInput(){
+      const hasFila = appState.lista.length>0;
+      setDisabled(btnDeq, !hasFila);
+      setDisabled(btnInicio, !hasFila);
+      setDisabled(btnFim, !hasFila);
     }
-    enqValor.addEventListener('input', ()=>{ updEnq(); updSem(); });
-    remValorFila.addEventListener('input', ()=>{ updRem(); updSem(); });
-    buscaValor.addEventListener('input', ()=>{ updBus(); updSem(); });
+    enqValor.addEventListener('input', updEnq);
+    remValorFila.addEventListener('input', updRem);
+    buscaValor.addEventListener('input', updBus);
     setDisabled(btnEnq,true); setDisabled(btnRemValor,true); setDisabled(btnBuscar,true);
-    setDisabled(btnDeq,true); setDisabled(btnInicio,true); setDisabled(btnFim,true);
+    updFilaSemInput();
 
     btnEnq.addEventListener('click', ()=>{
       const v=parseInt(enqValor.value,10);
       if(isNaN(v)) return alert('Valor?');
       const res=stepsFilaEnqueue(appState.lista, v, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
+      setTimeout(updFilaSemInput,0);
     });
     btnRemValor.addEventListener('click', ()=>{
       const v=parseInt(remValorFila.value,10);
@@ -552,11 +562,13 @@ function buildOperations(){
       }
       const res=stepsListaRemoverMeio(appState.lista, idx, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
+      setTimeout(updFilaSemInput,0);
     });
     btnDeq.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Fila vazia');
       const res=stepsFilaDequeue(appState.lista, meta);
       appState.lista=res.newState; startSteps(res.steps, appState.lista);
+      setTimeout(updFilaSemInput,0);
     });
     btnInicio.addEventListener('click', ()=>{
       if(appState.lista.length===0) return alert('Fila vazia');
